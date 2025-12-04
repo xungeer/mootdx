@@ -199,7 +199,8 @@ class StdQuotes(BaseQuotes):
         frequency = get_frequency(frequency)
         market = get_stock_market(symbol)
 
-        offset = (offset, 800)[offset > 800]
+        # offset = (offset, 800)[offset > 800]
+        offset = (offset, 8000)[offset > 8000]
         result = self.client.get_security_bars(int(frequency), int(market), str(symbol), int(start), int(offset))
 
         return to_data(result, symbol=symbol, client=self, **kwargs)
@@ -259,8 +260,8 @@ class StdQuotes(BaseQuotes):
         """
 
         frequency = get_frequency(frequency)
-        offset = (offset, 800)[offset > 800]
-
+        # offset = (offset, 800)[offset > 800]
+        offset = (offset, 8000)[offset > 8000]
         market = (MARKET_SZ, MARKET_SH, MARKET_BJ)[symbol[:2] in ['00', '88', '99', '89']]
         result = self.client.get_index_bars(int(frequency), int(market), str(symbol), int(start), int(offset))
 
@@ -483,7 +484,8 @@ class StdQuotes(BaseQuotes):
         """
         frequency = get_frequency(frequency)
 
-        offset = (offset, 800)[offset > 800]
+        # offset = (offset, 800)[offset > 800]
+        offset = (offset, 8000)[offset > 8000]        
         market = (MARKET_SZ, MARKET_SH, MARKET_BJ)[symbol[:2] in ['00', '88', '99', '89']]
         result = self.client.get_index_bars(int(frequency), int(market), str(symbol), int(start), int(offset))
 
