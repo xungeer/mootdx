@@ -57,14 +57,16 @@ class ReaderBase(ABC):
         if '#' in symbol:
             market = 'ds'
         # 通达信特有的板块指数88****开头的日线数据放在 sh 文件夹下
-        elif symbol.startswith('88'):
+        elif symbol.startswith('880'):
             market = 'sh'
+        elif symbol.startswith(('92','899')):
+            market = 'bj'            
         else:
             # 判断是sh还是sz
             market = get_stock_market(symbol, True)
 
         # 判断前缀(市场是sh和sz重置前缀)
-        if market.lower() in ['sh', 'sz']:
+        if market.lower() in ['sh', 'sz', 'bj']:
             symbol = market + symbol.lower().replace(market, '')
 
         # 判断后缀

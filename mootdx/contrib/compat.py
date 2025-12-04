@@ -27,6 +27,10 @@ class MooTdxDailyBarReader(TdxDailyBarReader):
         'SZ_INDEX',
         'SZ_FUND',
         'SZ_BOND',
+        'BJ_A_STOCK',
+        'BJ_INDEX',
+        'BJ_FUND',
+        'BJ_BOND',
     ]
 
     SECURITY_COEFFICIENT = {
@@ -41,6 +45,10 @@ class MooTdxDailyBarReader(TdxDailyBarReader):
         'SZ_INDEX': [0.01, 1.0],
         'SZ_FUND': [0.001, 0.01],
         'SZ_BOND': [0.001, 0.01],
+        'BJ_A_STOCK': [0.01, 0.01],
+        'BJ_INDEX': [0.01, 1.0],
+        'BJ_FUND': [0.001, 1.0],
+        'BJ_BOND': [0.001, 1.0],
     }
 
     def get_security_type(self, fname):
@@ -79,7 +87,7 @@ class MooTdxDailyBarReader(TdxDailyBarReader):
             if code_head in ['00', '88', '99']:
                 return 'SH_INDEX'
 
-            if code_head in ['50', '51', '58']:
+            if code_head in ['50', '51', '56', '58']:
                 return 'SH_FUND'
 
             # if code_head in ['01', '10', '11', '12', '13', '14']:
@@ -87,6 +95,15 @@ class MooTdxDailyBarReader(TdxDailyBarReader):
                 return 'SH_BOND'
 
             return 'SH_OTHER'
+        
+        if exchange == SECURITY_EXCHANGE[2]:
+            if code_head in ['92']:
+                return 'BJ_A_STOCK'
+            
+            if code_head in ['89']:
+                return 'BJ_INDEX'
+
+            return 'BJ_OTHER'
 
         logger.error('Unknown security exchange !\n')
         raise NotImplementedError

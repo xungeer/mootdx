@@ -16,6 +16,7 @@ from tqdm import tqdm
 from mootdx import config
 from mootdx.consts import MARKET_SH
 from mootdx.consts import MARKET_SZ
+from mootdx.consts import MARKET_BJ
 from mootdx.consts import return_last_value
 from mootdx.exceptions import MootdxValidationException
 from mootdx.logger import logger
@@ -207,7 +208,7 @@ class StdQuotes(BaseQuotes):
         """
         获取市场股票数量
 
-        :param market: 股票市场代码 sh 上海， sz 深圳
+        :param market: 股票市场代码 sh 上海， sz 深圳， bj 北京
         :return: pd.dataFrame or None
         """
         if market not in [0, 1, 2]:
@@ -225,8 +226,8 @@ class StdQuotes(BaseQuotes):
         :return:
         """
 
-        if market not in [0, 1]:
-            raise MootdxValidationException('市场代码错误, 目前只支持沪深市场')
+        if market not in [0, 1, 2]:
+            raise MootdxValidationException('市场代码错误, 目前只支持沪深京市场')
 
         counts = self.stock_count(market=market)
         stocks = None
@@ -241,7 +242,7 @@ class StdQuotes(BaseQuotes):
     def stock_all(self):
         stocks = None
 
-        for m in [0, 1]:
+        for m in [0, 1, 2]:
             stocks = pandas.concat([stocks, self.stocks(m)], ignore_index=True)
 
         return stocks
@@ -260,7 +261,7 @@ class StdQuotes(BaseQuotes):
         frequency = get_frequency(frequency)
         offset = (offset, 800)[offset > 800]
 
-        market = (MARKET_SZ, MARKET_SH)[symbol[:2] in ['00', '88', '99']]
+        market = (MARKET_SZ, MARKET_SH, MARKET_BJ)[symbol[:2] in ['00', '88', '99', '89']]
         result = self.client.get_index_bars(int(frequency), int(market), str(symbol), int(start), int(offset))
 
         return to_data(result, symbol=symbol, client=self, **kwargs)
@@ -287,8 +288,8 @@ class StdQuotes(BaseQuotes):
 
         market = get_stock_market(symbol)
 
-        if market not in [0, 1]:
-            raise MootdxValidationException('市场代码错误, 目前只支持沪深市场')
+        if market not in [0, 1, 2]:
+            raise MootdxValidationException('市场代码错误, 目前只支持沪深京市场')
 
         result = self.client.get_history_minute_time_data(market=market, code=symbol, date=date)
 
@@ -323,8 +324,8 @@ class StdQuotes(BaseQuotes):
 
         market = get_stock_market(symbol, string=False)
 
-        if market not in [0, 1]:
-            raise MootdxValidationException('市场代码错误, 目前只支持沪深市场')
+        if market not in [0, 1, 2]:
+            raise MootdxValidationException('市场代码错误, 目前只支持沪深京市场')
 
         result = self.client.get_history_transaction_data(market, symbol, start, offset, int(date))
         return to_data(result, symbol=symbol, client=self, **kwargs)
@@ -339,8 +340,8 @@ class StdQuotes(BaseQuotes):
 
         market = int(get_stock_market(symbol))
 
-        if market not in [0, 1]:
-            raise MootdxValidationException('市场代码错误, 目前只支持沪深市场')
+        if market not in [0, 1, 2 ]:
+            raise MootdxValidationException('市场代码错误, 目前只支持沪深京市场')
 
         result = self.client.get_company_info_category(market, symbol)
 
@@ -358,8 +359,8 @@ class StdQuotes(BaseQuotes):
         result = {}
         market = int(get_stock_market(symbol, string=False))
 
-        if market not in [0, 1]:
-            raise MootdxValidationException('市场代码错误, 目前只支持沪深市场')
+        if market not in [0, 1, 2]:
+            raise MootdxValidationException('市场代码错误, 目前只支持沪深京市场')
 
         category = self.client.get_company_info_category(market, symbol)
 
@@ -483,7 +484,7 @@ class StdQuotes(BaseQuotes):
         frequency = get_frequency(frequency)
 
         offset = (offset, 800)[offset > 800]
-        market = (MARKET_SZ, MARKET_SH)[symbol[:2] in ['00', '88', '99']]
+        market = (MARKET_SZ, MARKET_SH, MARKET_BJ)[symbol[:2] in ['00', '88', '99', '89']]
         result = self.client.get_index_bars(int(frequency), int(market), str(symbol), int(start), int(offset))
 
         return to_data(result, symbol=symbol, client=self, **kwargs)
