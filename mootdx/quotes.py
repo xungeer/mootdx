@@ -193,17 +193,41 @@ class StdQuotes(BaseQuotes):
         :param symbol: 股票代码
         :param frequency: 数据频次
         :param start: 开始位置
-        :param offset: 每次获取条数
+        :param offset: 每次获取条数 (支持超过800条，会自动分页请求)
         :return: pd.dataFrame or None
         """
         frequency = get_frequency(frequency)
         market = get_stock_market(symbol)
 
-        # offset = (offset, 800)[offset > 800]
-        offset = (offset, 8000)[offset > 8000]
-        result = self.client.get_security_bars(int(frequency), int(market), str(symbol), int(start), int(offset))
-
-        return to_data(result, symbol=symbol, client=self, **kwargs)
+        # 服务器单次请求最大返回约800条数据，超过则需要分页请求
+        BATCH_SIZE = 800
+        
+        if offset <= BATCH_SIZE:
+            result = self.client.get_security_bars(int(frequency), int(market), str(symbol), int(start), int(offset))
+            return to_data(result, symbol=symbol, client=self, **kwargs)
+        
+        # 分页请求以突破800条限制
+        all_data = []
+        remaining = offset
+        current_start = start
+        
+        while remaining > 0:
+            batch_count = min(remaining, BATCH_SIZE)
+            result = self.client.get_security_bars(int(frequency), int(market), str(symbol), int(current_start), int(batch_count))
+            
+            if not result:
+                break
+                
+            all_data.extend(result)
+            fetched = len(result)
+            
+            if fetched < batch_count:
+                break
+                
+            remaining -= fetched
+            current_start += fetched
+        
+        return to_data(all_data, symbol=symbol, client=self, **kwargs)
 
     def stock_count(self, market=MARKET_SH):
         """
@@ -255,17 +279,41 @@ class StdQuotes(BaseQuotes):
         :param symbol: 股票代码
         :param frequency: 数据频次
         :param start: 开始位置
-        :param offset: 获取数量
+        :param offset: 获取数量 (支持超过800条，会自动分页请求)
         :return:
         """
-
         frequency = get_frequency(frequency)
-        # offset = (offset, 800)[offset > 800]
-        offset = (offset, 8000)[offset > 8000]
         market = (MARKET_SZ, MARKET_SH, MARKET_BJ)[symbol[:2] in ['00', '88', '99', '89']]
-        result = self.client.get_index_bars(int(frequency), int(market), str(symbol), int(start), int(offset))
-
-        return to_data(result, symbol=symbol, client=self, **kwargs)
+        
+        # 服务器单次请求最大返回约800条数据，超过则需要分页请求
+        BATCH_SIZE = 800
+        
+        if offset <= BATCH_SIZE:
+            result = self.client.get_index_bars(int(frequency), int(market), str(symbol), int(start), int(offset))
+            return to_data(result, symbol=symbol, client=self, **kwargs)
+        
+        # 分页请求以突破800条限制
+        all_data = []
+        remaining = offset
+        current_start = start
+        
+        while remaining > 0:
+            batch_count = min(remaining, BATCH_SIZE)
+            result = self.client.get_index_bars(int(frequency), int(market), str(symbol), int(current_start), int(batch_count))
+            
+            if not result:
+                break
+                
+            all_data.extend(result)
+            fetched = len(result)
+            
+            if fetched < batch_count:
+                break
+                
+            remaining -= fetched
+            current_start += fetched
+        
+        return to_data(all_data, symbol=symbol, client=self, **kwargs)
 
     def minute(self, symbol=None, **kwargs):
         """
@@ -479,17 +527,43 @@ class StdQuotes(BaseQuotes):
         :param frequency:   数据频次
         :param market:      证券市场
         :param start:       开始位置
-        :param offset:      每次获取条数
+        :param offset:      每次获取条数 (支持超过800条，会自动分页请求)
         :return: pd.dataFrame or None
         """
         frequency = get_frequency(frequency)
-
-        # offset = (offset, 800)[offset > 800]
-        offset = (offset, 8000)[offset > 8000]        
         market = (MARKET_SZ, MARKET_SH, MARKET_BJ)[symbol[:2] in ['00', '88', '99', '89']]
-        result = self.client.get_index_bars(int(frequency), int(market), str(symbol), int(start), int(offset))
-
-        return to_data(result, symbol=symbol, client=self, **kwargs)
+        
+        # 服务器单次请求最大返回约800条数据，超过则需要分页请求
+        BATCH_SIZE = 800
+        
+        if offset <= BATCH_SIZE:
+            # 单次请求即可满足
+            result = self.client.get_index_bars(int(frequency), int(market), str(symbol), int(start), int(offset))
+            return to_data(result, symbol=symbol, client=self, **kwargs)
+        
+        # 分页请求以突破800条限制
+        all_data = []
+        remaining = offset
+        current_start = start
+        
+        while remaining > 0:
+            batch_count = min(remaining, BATCH_SIZE)
+            result = self.client.get_index_bars(int(frequency), int(market), str(symbol), int(current_start), int(batch_count))
+            
+            if not result:
+                break
+                
+            all_data.extend(result)
+            fetched = len(result)
+            
+            # 如果返回数据少于请求数量，说明已到数据末尾
+            if fetched < batch_count:
+                break
+                
+            remaining -= fetched
+            current_start += fetched
+        
+        return to_data(all_data, symbol=symbol, client=self, **kwargs)
 
     def block(self, tofile='block.dat', **kwargs):
         """
@@ -506,7 +580,7 @@ class StdQuotes(BaseQuotes):
 class ExtQuotes(BaseQuotes):
     """扩展市场实时行情"""
 
-    # server = ("112.74.214.43", 7727)
+    server = ("218.75.75.18", 7720)
 
     def __init__(self, server: list = None, bestip=False, timeout=15, **kwargs):
         """
@@ -519,7 +593,7 @@ class ExtQuotes(BaseQuotes):
         super().__init__(bestip=bestip, timeout=timeout, server=server, **kwargs)
         self.server and config.set('BESTIP', {'EX': self.server})
 
-        logger.warning('目前扩展市场行情接口已经失效, 后期有望修复.')
+        # 扩展市场行情接口（期货、港股通等）
 
         try:
             config.get('SERVER').get('EX')[0]
