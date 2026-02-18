@@ -167,39 +167,45 @@ class StdReader(ReaderBase):
 class ExtReader(ReaderBase):
     """扩展市场读取"""
 
-    def __init__(self, tdxdir=None):
-        super(ExtReader, self).__init__(tdxdir)
-        self.reader = TdxExHqDailyBarReader()
+class ExtReader(ReaderBase):
+    """扩展市场读取"""
 
-    def daily(self, symbol=None):
+    def daily(self, symbol=None, **kwargs):
         """
         获取扩展市场日线数据
 
+        :param symbol: 证券代码
         :return: pd.dataFrame or None
         """
-
         vipdoc = self.find_path(symbol=symbol, subdir='lday', suffix='day')
-        return self.reader.get_df(str(vipdoc)) if vipdoc else None
+        return TdxExHqDailyBarReader().get_df(str(vipdoc)) if vipdoc else None
 
-    def minute(self, symbol=None):
+    def minute(self, symbol=None, suffix=1, **kwargs):
         """
         获取扩展市场分钟线数据
 
+        :param symbol: 证券代码
+        :param suffix: 文件前缀
         :return: pd.dataFrame or None
         """
-
         if not symbol:
             return None
 
-        vipdoc = self.find_path(symbol=symbol, subdir='minline', suffix=['lc1', '1'])
-        return self.reader.get_df(str(vipdoc)) if vipdoc else None
+        subdir = 'fzline' if str(suffix) == '5' else 'minline'
+        suffix = ['lc5', '5'] if str(suffix) == '5' else ['lc1', '1']
+        symbol_path = self.find_path(symbol, subdir=subdir, suffix=suffix)
 
-    def fzline(self, symbol=None):
+        if symbol_path:
+            reader = TdxMinBarReader() if 'lc' not in symbol_path.suffix else TdxLCMinBarReader()
+            return reader.get_df(str(symbol_path))
+
+        return None
+
+    def fzline(self, symbol=None, **kwargs):
         """
-        获取日线数据
+        获取扩展市场5分钟线数据
 
+        :param symbol: 证券代码
         :return: pd.dataFrame or None
         """
-
-        vipdoc = self.find_path(symbol=symbol, subdir='fzline', suffix='lc5')
-        return self.reader.get_df(str(vipdoc)) if symbol else None
+        return self.minute(symbol, suffix=5, **kwargs)
