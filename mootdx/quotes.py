@@ -1,4 +1,5 @@
 import math
+import time
 from datetime import datetime
 
 import pandas
@@ -76,7 +77,7 @@ class BaseQuotes(object):
         self.server = valid_server(server)
 
         logger.debug(f'bestip => {bestip}')
-        bestip and check_server(sync=True)
+        bestip and check_server(sync=False)
 
         self.timeout = timeout or 15
         logger.debug(f'timeout => {self.timeout}')
@@ -218,7 +219,7 @@ class StdQuotes(BaseQuotes):
             if not result:
                 break
                 
-            all_data.extend(result)
+            all_data = result + all_data
             fetched = len(result)
             
             if fetched < batch_count:
@@ -226,6 +227,10 @@ class StdQuotes(BaseQuotes):
                 
             remaining -= fetched
             current_start += fetched
+            
+            # 添加请求间隔，避免触发服务器限流
+            if remaining > 0:
+                time.sleep(0.3)
         
         return to_data(all_data, symbol=symbol, client=self, **kwargs)
 
@@ -304,7 +309,7 @@ class StdQuotes(BaseQuotes):
             if not result:
                 break
                 
-            all_data.extend(result)
+            all_data = result + all_data
             fetched = len(result)
             
             if fetched < batch_count:
@@ -312,6 +317,10 @@ class StdQuotes(BaseQuotes):
                 
             remaining -= fetched
             current_start += fetched
+            
+            # 添加请求间隔，避免触发服务器限流
+            if remaining > 0:
+                time.sleep(0.3)
         
         return to_data(all_data, symbol=symbol, client=self, **kwargs)
 
@@ -553,7 +562,7 @@ class StdQuotes(BaseQuotes):
             if not result:
                 break
                 
-            all_data.extend(result)
+            all_data = result + all_data
             fetched = len(result)
             
             # 如果返回数据少于请求数量，说明已到数据末尾
@@ -562,6 +571,10 @@ class StdQuotes(BaseQuotes):
                 
             remaining -= fetched
             current_start += fetched
+            
+            # 添加请求间隔，避免触发服务器限流
+            if remaining > 0:
+                time.sleep(0.3)
         
         return to_data(all_data, symbol=symbol, client=self, **kwargs)
 
@@ -785,17 +798,56 @@ class ExtQuotes(BaseQuotes):
         :param market: 市场ID
         :param symbol: 证券代码
         :param start:  起始位置
-        :param offset: 获取数量
+        :param offset: 获取数量 (支持超过700条，会自动分页请求)
         :return:
         """
 
         frequency = get_frequency(frequency)
         market, symbol = self.validate(market, symbol)
-        result = self.client.get_instrument_bars(
-            category=frequency, market=market, code=symbol, start=start, count=offset
-        )
-
-        return to_data(result, symbol=symbol, **kwargs)
+        
+        # 扩展市场服务器单次请求最大返回约700条数据，超过则需要分页请求
+        BATCH_SIZE = 700
+        
+        if offset <= BATCH_SIZE:
+            result = self.client.get_instrument_bars(
+                category=frequency, market=market, code=symbol, start=start, count=offset
+            )
+            return to_data(result, symbol=symbol, **kwargs)
+        
+        # 分页请求以突破700条限制
+        # 注意：通达信API的start参数表示从最新数据往回的偏移量
+        # start=0返回最新数据，start=700返回更早的历史数据
+        # 每批数据内部已按时间从旧到新排序，但后获取的批次是更早的历史数据
+        # 因此需要将后获取的数据插入到列表前面
+        all_data = []
+        remaining = offset
+        current_start = start
+        
+        while remaining > 0:
+            batch_count = min(remaining, BATCH_SIZE)
+            result = self.client.get_instrument_bars(
+                category=frequency, market=market, code=symbol, start=current_start, count=batch_count
+            )
+            
+            if not result:
+                break
+            
+            # 将历史数据插入到列表前面，保持时间顺序（从旧到新）
+            all_data = result + all_data
+            fetched = len(result)
+            
+            # 如果返回数据少于请求数量，说明已到数据末尾
+            if fetched < batch_count:
+                break
+                
+            remaining -= fetched
+            current_start += fetched
+            
+            # 添加请求间隔，避免触发服务器限流
+            if remaining > 0:
+                time.sleep(0.3)
+        
+        return to_data(all_data, symbol=symbol, **kwargs)
 
     @retry(
         wait=wait_random(min=1, max=10),
