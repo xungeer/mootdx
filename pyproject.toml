@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "mootdx"
-version = "0.11.7"
+version = "0.11.9"
 description = "通达信数据读取接口."
 authors = ["bopo <ibopo@126.com>"]
 readme = "README.md"
@@ -30,7 +30,8 @@ mootdx = "mootdx.__main__:entry"
 python = "^3.8"
 httpx = "^0.25.0"
 tenacity = "^8.1.0"
-tdxpy = "^0.2.5"
+tdxpy = { git = "ssh://git@github.com/xungeer/tdxpy.git", tag = "v0.2.9" }
+pandas = ">=1.5,<4.0"
 tqdm = "*"
 prettytable = "^3.5.0"
 click = "^8.1.3"
@@ -67,7 +68,7 @@ version_files = [
 
 
 [tool.poe.tasks]
-venv = "poetry install --sync"
+venv = "poetry install --sync --with test"
 lock = "poetry lock --no-update"
 
 test = "poetry run pytest"

@@ -89,7 +89,7 @@ client.bars(symbol='600036', adjust='hfq')
 
 ** 参数说明: **
 
-- market: 市场代码. 0 - 深圳, 1 - 上海 (可以使用常量 `MARKET_SZ`, `MARKET_SH` 代替)
+- market: 市场代码. 0 - 深圳, 1 - 上海, 2 - 北京 (可以使用常量 `MARKET_SZ`, `MARKET_SH`, `MARKET_BJ` 代替)
 
 ** 调用方法：**
 
@@ -105,10 +105,10 @@ client.stock_count(market=consts.MARKET_SH)
 
 ** 参数说明: **
 
-- market: 市场代码. 0 - 深圳, 1 - 上海 (可以使用常量 `MARKET_SZ`, `MARKET_SH` 代替)
+- market: 市场代码. 0 - 深圳, 1 - 上海, 2 - 北京 (可以使用常量 `MARKET_SZ`, `MARKET_SH`, `MARKET_BJ` 代替)
 
 > 注意，在引入 consts 之后， （`from mootdx import consts`）
-> 我们可以使用 consts.MARKET_SH , consts.MARKET_SZ 常量来代替 1 和 0 作为参数
+> 我们可以使用 consts.MARKET_SH、consts.MARKET_SZ、consts.MARKET_BJ 常量作为参数
 
 ** 调用方法：**
 
@@ -117,7 +117,9 @@ from mootdx.quotes import Quotes
 from mootdx import consts
 
 client = Quotes.factory(market='std')
-symbol = client.stocks(market=consts.MARKET_SH)
+sh_stocks = client.stocks(market=consts.MARKET_SH)
+sz_stocks = client.stocks(market=consts.MARKET_SZ)
+bj_stocks = client.stocks(market=consts.MARKET_BJ)
 ```
 
 ## 05. 指数K线行情
@@ -189,7 +191,7 @@ client = Quotes.factory(market='std')
 client.minutes(symbol='000001', date='20171010')
 ```
 
-注意，在引入 consts 之后， （`from mootdx import consts`） 我们可以使用 consts.MARKET_SH , consts.MARKET_SZ 常量来代替 1 和 0 作为参数
+注意，在引入 consts 之后（`from mootdx import consts`），我们可以使用 `consts.MARKET_SZ`、`consts.MARKET_SH`、`consts.MARKET_BJ` 常量来代替 0、1、2 作为参数。
 
 ## 08. 查询分笔成交
 
@@ -292,7 +294,53 @@ client = Quotes.factory(market='std')
 client.finance(symbol="600300")
 ```
 
-## 14. 读取 OHLC k线信息
+## 14. 批量读取财务信息
+
+`finances` 接口支持深圳、上海、北京三个市场，可一次传入任意长度的股票代码列表。
+接口内部会自动按最多 80 只分页，并校验每批返回数量及代码是否完整。
+
+**参数说明: **
+
+- symbol: 股票代码列表。
+- batch_size: 每批请求数量，取值范围 1 ~ 80，默认为 80。
+
+**调用方法：**
+
+```python
+from mootdx.quotes import Quotes
+
+client = Quotes.factory(market='std')
+client.finances(symbol=["000001", "600300", "920971"])
+```
+
+返回值为 `pd.DataFrame`，字段与单只查询 `finance(symbol=...)` 一致。服务器若少返、多返或返回不同代码，
+接口会明确抛出 `MootdxValidationException`，不会伪造或静默丢弃记录。
+
+## 15. 读取通达信行业分类码
+
+`industry_codes` 直接从行情服务器下载并解析 `tdxhy.cfg`，覆盖深圳、上海、北京三个市场，
+不会在本地写入临时文件。
+
+**调用方法：**
+
+```python
+from mootdx.quotes import Quotes
+
+client = Quotes.factory(market='std')
+industry_codes = client.industry_codes()
+```
+
+返回值为 `pd.DataFrame`，包含以下字段：
+
+- `market`: 市场代码，0 - 深圳、1 - 上海、2 - 北京。
+- `code`: 六位证券代码。
+- `tdx_industry`: 通达信行业分类码，如 `T1001`。
+- `tdx_detail`: 通达信细分分类码，如 `X500102`。
+
+分类暂未维护的证券可能返回空分类码。接口会忽略空行和完全相同的重复记录；空文件、
+畸形记录或同一市场同一证券的分类冲突会抛出 `MootdxValidationException`。
+
+## 16. 读取 OHLC k线信息
 
 **参数说明: **
 

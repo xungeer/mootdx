@@ -14,8 +14,8 @@ from mootdx.utils import to_data
 data = [
     ('600036', MARKET_SH),
     ('000001', MARKET_SZ),
-    ('430090', MARKET_BJ),
-    ('872925', MARKET_BJ),
+    ('920971', MARKET_BJ),
+    ('920992', MARKET_BJ),
 ]
 
 

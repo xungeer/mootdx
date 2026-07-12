@@ -53,6 +53,10 @@ pip install -U tdxpy mootdx
 
 > 如果不清楚各种依赖关系就用这个命令 `pip install -U 'mootdx[all]'`
 
+> 本 fork 的沪深北三市场股票列表与批量财务接口需要配套
+> [`xungeer/tdxpy` v0.2.9](https://github.com/xungeer/tdxpy/tree/v0.2.9)。
+> 通过源码部署时应先安装该版本，再安装本仓库对应版本。
+
 使用说明
 --------
 
@@ -94,6 +98,16 @@ client.index(symbol='000001', frequency=9)
 
 # 分钟
 client.minute(symbol='000001')
+
+# 查询沪、深、北市场证券列表
+from mootdx import consts
+
+sh_stocks = client.stocks(market=consts.MARKET_SH)
+sz_stocks = client.stocks(market=consts.MARKET_SZ)
+bj_stocks = client.stocks(market=consts.MARKET_BJ)
+
+# 查询沪、深、北市场的通达信行业分类码
+industry_codes = client.industry_codes()
 ```
 
 通达信财务数据读取
@@ -109,6 +123,24 @@ Affair.fetch(downdir='tmp', filename='gpcw19960630.zip')
 
 # 下载全部
 Affair.parse(downdir='tmp')
+```
+
+源码开发与测试
+------------
+
+测试依赖（包括 `freezegun`）属于 Poetry 的 `test` 依赖组。请在 mootdx
+项目根目录准备独立环境后运行测试，避免复用其它项目的虚拟环境：
+
+```shell
+poetry install --sync --with test
+poetry run pytest
+```
+
+不使用 Poetry 时，可以安装项目和测试两份依赖清单：
+
+```shell
+python -m pip install -r requirements.txt -r tests/requirements.txt
+python -m pytest
 ```
 
 加微信交流

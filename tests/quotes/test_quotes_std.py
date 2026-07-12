@@ -126,7 +126,7 @@ class TestStdRaises(unittest.TestCase):
 
     def test_stocks_raises(self):
         with pytest.raises(MootdxValidationException) as e:
-            self.client.stocks(2)
+            self.client.stocks(3)
 
         exec_msg = e.value.args[0]
-        assert exec_msg == '市场代码错误, 目前只支持沪深市场'
+        assert exec_msg == '市场代码错误, 目前只支持沪深京市场'

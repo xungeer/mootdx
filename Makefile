@@ -91,7 +91,7 @@ prepare: clean ## 准备开发环境
 	git config user.email ibopo@126.com
 	git config pull.rebase false
 	git config user.name bopo
-	poetry install --sync
+	poetry install --sync --with test
 
 pull:
 	git pull origin `git symbolic-ref --short -q HEAD` --tags

@@ -15,7 +15,10 @@ def factor_reversion(symbol: str, method: str = 'qfq', raw: pd.DataFrame = None)
         raw = raw.sort_index(ascending=True)
 
         data = pd.concat([raw, factor.loc[raw.index[0]: raw.index[-1], ['factor']]], axis=1)
-        data.factor = data.factor.fillna(method=('ffill', 'bfill')[method == 'qfq'], axis=0)
+        if method == 'qfq':
+            data.factor = data.factor.bfill()
+        else:
+            data.factor = data.factor.ffill()
         data.factor = data.factor.fillna(1.0, axis=0)
         data.factor = data.factor.astype(float)
 
@@ -38,9 +41,9 @@ def _reversion(bfq_data, xdxr_data, type_):
     if len(info) > 0:
         # 有除权数据
         data = pd.concat([bfq_data, info.loc[bfq_data.index[0]: bfq_data.index[-1], ['category']]], axis=1)
-        data['if_trade'].fillna(value=0, inplace=True)
+        data['if_trade'] = data['if_trade'].fillna(0)
 
-        data = data.fillna(method='ffill')
+        data = data.ffill()
         data = pd.concat(
             [data, info.loc[bfq_data.index[0]: bfq_data.index[-1], ['fenhong', 'peigu', 'peigujia', 'songzhuangu']]],
             axis=1)
@@ -75,7 +78,7 @@ def _reversion(bfq_data, xdxr_data, type_):
         # 大该是涨跌幅
         data['high_limit'] = data['high_limit'] * data['adj']
         data['low_limit'] = data['low_limit'] * data['adj']
-    except:
+    except Exception:
         pass
 
     data = data.query('if_trade==1 and open != 0')
@@ -101,7 +104,7 @@ def etf_reversion(data, xdxr, adjust='01'):
     if adjust.lower() in ['01', 'qfq']:
         # 前复权向前移动一天
         # 向前传播
-        data['suogu'] = data['suogu'].fillna(method='bfill')
+        data['suogu'] = data['suogu'].bfill()
         data['suogu'] = data['suogu'].fillna(1)
         data['suogu'] = data['suogu'].shift(-1)
 
@@ -109,7 +112,7 @@ def etf_reversion(data, xdxr, adjust='01'):
             data[col] = data[col] / data['suogu']
 
     if adjust.lower() in ['02', 'hfq']:
-        data['suogu'] = data['suogu'].fillna(method='ffill')
+        data['suogu'] = data['suogu'].ffill()
         data['suogu'] = data['suogu'].fillna(1)
 
         for col in ['open', 'high', 'low', 'close']:

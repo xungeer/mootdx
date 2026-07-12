@@ -471,17 +471,21 @@ files = [
 
 [[package]]
 name = "tdxpy"
-version = "0.2.6"
-description = "通达信数据读取接口."
+version = "0.2.9"
+description = "Local tdxpy fork with Shanghai, Shenzhen and Beijing market support"
 optional = false
-python-versions = ">=3.8,<4.0"
-files = [
-    {file = "tdxpy-0.2.6-py3-none-any.whl", hash = "sha256:a7317286534812a7f78e1992a26cf9ae0c89fa360fb620cfece995877339fb37"},
-    {file = "tdxpy-0.2.6.tar.gz", hash = "sha256:a66bafcd26f40083e2376f65a2db39dde58453040916fee62f8007ed4e7df3a7"},
-]
+python-versions = ">=3.8"
+files = []
+develop = false
 
 [package.dependencies]
-pandas = "*"
+pandas = ">=1.5,<4.0"
+
+[package.source]
+type = "git"
+url = "ssh://git@github.com/xungeer/tdxpy.git"
+reference = "v0.2.9"
+resolved_reference = "53111f8df4dc3a27555e609f675b5d815cfb5a59"
 
 [[package]]
 name = "tenacity"
@@ -553,4 +557,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "cd5f8ea8df541786c5f30417c28d93905deafcf5023ed92a6177d6a5698d5769"
+content-hash = "9ca642355ee41ed0d4aa15751a091e782687e96e8b99927e1ff4b8cdf8991751"

@@ -260,12 +260,27 @@ class StdQuotes(BaseQuotes):
             raise MootdxValidationException('市场代码错误, 目前只支持沪深京市场')
 
         counts = self.stock_count(market=market)
-        stocks = None
+        page_size = 1000
+        pages = []
 
         if counts > 0:
-            for start in tqdm(range(0, counts, 1000), ascii=True):
-                result = self.client.get_security_list(market=market, start=start)
-                stocks = pandas.concat([stocks, to_data(result)], ignore_index=True) if start > 1 else to_data(result)
+            for start in tqdm(range(0, counts, page_size), ascii=True):
+                result = self.client.get_security_list(market=market, start=start, limit=page_size)
+                page = to_data(result)
+                expected_count = min(page_size, counts - start)
+                if page is None or len(page) != expected_count:
+                    actual_count = 0 if page is None else len(page)
+                    raise MootdxValidationException(
+                        f'股票列表分页不完整: market={market}, start={start}, '
+                        f'expected={expected_count}, actual={actual_count}'
+                    )
+                pages.append(page)
+
+        stocks = pandas.concat(pages, ignore_index=True) if pages else None
+        if stocks is not None and len(stocks) != counts:
+            raise MootdxValidationException(
+                f'股票列表数量不完整: market={market}, expected={counts}, actual={len(stocks)}'
+            )
 
         return stocks
 
@@ -468,6 +483,143 @@ class StdQuotes(BaseQuotes):
         result = self.client.get_finance_info(market=market, code=symbol)
 
         return to_data(result, symbol=symbol, client=self, **kwargs)
+
+    def finances(self, symbol=None, batch_size=80, **kwargs):
+        """
+        批量读取财务信息
+
+        :param symbol: 股票代码列表
+        :param batch_size: 每批请求数量，最大 80
+        :return: pd.DataFrame
+        """
+
+        if not symbol:
+            return to_data(None)
+
+        if not isinstance(symbol, list):
+            raise MootdxValidationException('symbol 必须是股票代码列表')
+
+        if type(batch_size) is not int or not 1 <= batch_size <= 80:
+            raise MootdxValidationException('batch_size 必须是 1 到 80 之间的整数')
+
+        try:
+            stocks = get_stock_markets(symbol)
+        except (AssertionError, TypeError, ValueError) as exc:
+            raise MootdxValidationException(f'股票代码列表无效: {exc}') from exc
+
+        records = []
+        for start in range(0, len(stocks), batch_size):
+            batch = stocks[start : start + batch_size]
+            result = self.client.get_finance_info_batch(batch)
+            actual_count = len(result) if isinstance(result, list) else 0
+
+            if actual_count != len(batch):
+                raise MootdxValidationException(
+                    f'批量财务信息返回数量不完整: start={start}, '
+                    f'expected={len(batch)}, actual={actual_count}'
+                )
+
+            try:
+                actual_stocks = [(item['market'], item['code']) for item in result]
+            except (KeyError, TypeError) as exc:
+                raise MootdxValidationException(
+                    f'批量财务信息返回缺少 market/code: start={start}'
+                ) from exc
+
+            if sorted(actual_stocks) != sorted((market, code) for market, code in batch):
+                raise MootdxValidationException(
+                    f'批量财务信息返回代码不匹配: start={start}, '
+                    f'expected={batch}, actual={actual_stocks}'
+                )
+
+            records.extend(result)
+
+        return to_data(records, symbol=symbol, client=self, **kwargs)
+
+    def industry_codes(self):
+        """
+        读取通达信行业分类码
+
+        :return: 包含 market、code、tdx_industry、tdx_detail 的 pd.DataFrame
+        """
+
+        content = self.client.get_report_file_by_size('tdxhy.cfg')
+        if content is None:
+            raise MootdxValidationException('tdxhy.cfg 返回空文件')
+        if isinstance(content, str):
+            text = content
+        elif isinstance(content, (bytes, bytearray, memoryview)):
+            try:
+                text = bytes(content).decode('gbk')
+            except UnicodeDecodeError as exc:
+                raise MootdxValidationException('tdxhy.cfg 不是有效的 GBK 文本') from exc
+        else:
+            raise MootdxValidationException('tdxhy.cfg 返回类型错误')
+
+        if not text.strip():
+            raise MootdxValidationException('tdxhy.cfg 返回空文件')
+
+        records = {}
+        for line_number, raw_line in enumerate(text.splitlines(), start=1):
+            if not raw_line.strip():
+                continue
+
+            fields = raw_line.split('|')
+            if len(fields) != 6:
+                raise MootdxValidationException(
+                    f'tdxhy.cfg 第 {line_number} 行字段数量错误: expected=6, actual={len(fields)}'
+                )
+
+            market_value, code, tdx_industry, reserved1, reserved2, tdx_detail = fields
+            if market_value not in {'0', '1', '2'}:
+                raise MootdxValidationException(
+                    f'tdxhy.cfg 第 {line_number} 行市场代码错误: {market_value!r}'
+                )
+            if len(code) != 6 or not code.isascii() or not code.isdigit():
+                raise MootdxValidationException(
+                    f'tdxhy.cfg 第 {line_number} 行证券代码错误: {code!r}'
+                )
+            if reserved1 or reserved2:
+                raise MootdxValidationException(
+                    f'tdxhy.cfg 第 {line_number} 行保留字段非空'
+                )
+            if tdx_industry and not (
+                tdx_industry.startswith('T')
+                and tdx_industry[1:].isascii()
+                and tdx_industry[1:].isdigit()
+            ):
+                raise MootdxValidationException(
+                    f'tdxhy.cfg 第 {line_number} 行通达信行业分类码错误: {tdx_industry!r}'
+                )
+            if tdx_detail and not (
+                tdx_detail.startswith('X')
+                and tdx_detail[1:].isascii()
+                and tdx_detail[1:].isdigit()
+            ):
+                raise MootdxValidationException(
+                    f'tdxhy.cfg 第 {line_number} 行通达信细分分类码错误: {tdx_detail!r}'
+                )
+
+            market = int(market_value)
+            key = (market, code)
+            record = {
+                'market': market,
+                'code': code,
+                'tdx_industry': tdx_industry,
+                'tdx_detail': tdx_detail,
+            }
+            previous = records.get(key)
+            if previous is not None and previous != record:
+                raise MootdxValidationException(
+                    f'tdxhy.cfg 第 {line_number} 行证券分类冲突: market={market}, code={code}'
+                )
+            records[key] = record
+
+        if not records:
+            raise MootdxValidationException('tdxhy.cfg 没有有效记录')
+
+        columns = ['market', 'code', 'tdx_industry', 'tdx_detail']
+        return pd.DataFrame.from_records(list(records.values()), columns=columns)
 
     def k(self, symbol='', begin=None, end=None, **kwargs):
         """

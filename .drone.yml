@@ -18,6 +18,8 @@ steps:
       PYPI_PASSWORD:
         from_secret: pypi_password
     when:
+      repo:
+        - mootdx/mootdx
       ref:
         include:
         - refs/tags/**
