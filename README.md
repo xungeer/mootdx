@@ -128,8 +128,23 @@ Affair.parse(downdir='tmp')
 源码开发与测试
 ------------
 
-测试依赖（包括 `freezegun`）属于 Poetry 的 `test` 依赖组。请在 mootdx
-项目根目录准备独立环境后运行测试，避免复用其它项目的虚拟环境：
+推荐使用 uv 0.11.17 或更高版本在项目根目录创建独立、可复现的开发测试环境。
+`uv.lock` 已锁定运行依赖、默认测试依赖（包括 `freezegun`），以及 `xungeer/tdxpy` 的
+`v0.2.9` 标签与实际提交：
+
+```shell
+uv sync --locked
+uv run --locked pytest
+```
+
+仓库通过 `.python-version` 固定日常开发基线为 Python 3.12；发布包仍支持
+Python 3.8 及以上版本，多版本兼容性继续由原有测试矩阵覆盖。
+
+`tdxpy` 与 Poetry 原配置一样通过 GitHub SSH 获取；首次使用前需确保当前机器
+可以访问 `git@github.com`。修改依赖时，应同时维护标准 `[project]` / uv 配置和
+`[tool.poetry]` 配置，并分别更新 `uv.lock` 与 `poetry.lock`，避免两套环境漂移。
+
+原 Poetry 1.7 发布与测试流程继续保留。测试依赖属于 Poetry 的 `test` 依赖组：
 
 ```shell
 poetry install --sync --with test

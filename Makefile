@@ -1,4 +1,4 @@
-.PHONY: cleanup prepare history publish release version clean test cov
+.PHONY: cleanup prepare history publish release version clean test cov uv-sync uv-test
 
 .DEFAULT_GOAL := help
 define BROWSER_PYSCRIPT
@@ -68,6 +68,12 @@ fmt:
 
 test: # run tests quickly with the default Python
 	@poetry run pytest tests
+
+uv-sync: ## 使用 uv.lock 创建或同步开发测试环境
+	@uv sync --locked
+
+uv-test: ## 在锁定的 uv 环境中运行完整测试
+	@uv run --locked pytest
 
 test-all:
 	tox

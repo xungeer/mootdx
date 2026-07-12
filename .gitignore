@@ -12,6 +12,7 @@ __pycache__/
 .pytest_cache/
 .Python
 env/
+.venv/
 build/
 develop-eggs/
 dist/
@@ -60,9 +61,6 @@ docs/_build/
 
 # PyBuilder
 target/
-
-# pyenv python configuration file
-.python-version
 
 .idea
 .github
