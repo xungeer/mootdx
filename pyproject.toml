@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "mootdx"
-version = "0.11.9"
+version = "0.12.0"
 description = "通达信数据读取接口."
 authors = ["bopo <ibopo@126.com>"]
 readme = "README.md"
@@ -13,12 +13,9 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Natural Language :: English",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.6",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
 ]
 
 
@@ -28,16 +25,16 @@ classifiers = [
 [project]
 name = "mootdx"
 dynamic = ["version"]
-requires-python = ">=3.8,<4.0"
+requires-python = ">=3.10,<4.0"
 dependencies = [
-    "httpx>=0.25.0,<0.26.0",
+    "httpx>=0.25.0,<0.29.0",
     "tenacity>=8.1.0,<9.0.0",
-    "tdxpy==0.2.9",
+    "tdxpy==0.3.0",
     "pandas>=1.5,<4.0",
     "tqdm",
     "prettytable>=3.5.0,<4.0.0",
     "click>=8.1.3,<9.0.0",
-    "typing-extensions>=4.5.0,<5.0.0",
+    "typing-extensions>=4.9.0,<5.0.0",
     "mini-racer>=0.12.0,<0.13.0",
 ]
 
@@ -53,7 +50,7 @@ required-version = ">=0.11.17"
 default-groups = ["test"]
 
 [tool.uv.sources]
-tdxpy = { git = "ssh://git@github.com/xungeer/tdxpy.git", tag = "v0.2.9" }
+tdxpy = { git = "ssh://git@github.com/xungeer/tdxpy.git", tag = "v0.3.0" }
 
 
 [tool.poetry.scripts]
@@ -61,15 +58,15 @@ mootdx = "mootdx.__main__:entry"
 
 
 [tool.poetry.dependencies]
-python = "^3.8"
-httpx = "^0.25.0"
+python = "^3.10"
+httpx = ">=0.25.0,<0.29.0"
 tenacity = "^8.1.0"
-tdxpy = { git = "ssh://git@github.com/xungeer/tdxpy.git", tag = "v0.2.9" }
+tdxpy = { git = "ssh://git@github.com/xungeer/tdxpy.git", tag = "v0.3.0" }
 pandas = ">=1.5,<4.0"
 tqdm = "*"
 prettytable = "^3.5.0"
 click = "^8.1.3"
-typing-extensions = "^4.5.0"
+typing-extensions = "^4.9.0"
 mini-racer = "^0.12.0"
 
 [tool.poetry.group.test.dependencies]

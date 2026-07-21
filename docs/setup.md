@@ -25,15 +25,18 @@ pip install -U mootdx
 
 ## 源码安装[不建议, 速度较慢]
 
-直接远程源码安装
+本 fork 的服务端复权接口依赖配套的 `xungeer/tdxpy` v0.3.0。源码部署时应
+按标签成对安装：
 
 ```shell
-pip install git+https://github.com/mootdx/mootdx.git
+python -m pip install 'git+ssh://git@github.com/xungeer/tdxpy.git@v0.3.0'
+python -m pip install 'git+ssh://git@github.com/xungeer/mootdx.git@v0.12.0'
 ```
 
-本 fork 新增的沪深北三市场股票列表与批量财务接口依赖
-`xungeer/tdxpy` v0.2.9；源码部署应成对安装这两个 Git 版本。普通 PyPI
-安装仍以公开包实际发布版本为准。
+两个 fork 版本均未发布到公共 PyPI；以上命令要求当前机器已有对应私有仓库的
+SSH 访问权限。私有 wheelhouse 部署时，应先安装环境锁定的运行依赖和
+`tdxpy-0.3.0` wheel，再以 `--no-deps` 安装 `mootdx-0.12.0` wheel，避免
+安装器重新解析 wheel 元数据中的私有依赖来源。
 
 ## 源码开发与测试
 

@@ -25,7 +25,7 @@
 --------
 
 -   操作系统: Windows / MacOS / Linux 都可以运行.
--   Python: 3.8 以及以上版本.
+-   Python: 3.10 以及以上版本.
 
 安装方法
 --------
@@ -48,14 +48,18 @@ pip install 'mootdx[all]'
 ### 升级安装
 
 ```shell
-pip install -U tdxpy mootdx
+# 公共 PyPI 上游版本
+python -m pip install -U tdxpy mootdx
 ```
 
 > 如果不清楚各种依赖关系就用这个命令 `pip install -U 'mootdx[all]'`
 
 > 本 fork 的沪深北三市场股票列表与批量财务接口需要配套
-> [`xungeer/tdxpy` v0.2.9](https://github.com/xungeer/tdxpy/tree/v0.2.9)。
-> 通过源码部署时应先安装该版本，再安装本仓库对应版本。
+> [`xungeer/tdxpy` v0.3.0](https://github.com/xungeer/tdxpy/tree/v0.3.0)。
+> 上面的 PyPI 命令不会安装本 fork。通过源码部署时应按标签先安装配套 tdxpy，
+> 再安装本仓库对应版本，具体命令见[安装文档](docs/setup.md)。这两个 fork
+> 未发布到公共 PyPI；私有 wheelhouse 应先安装锁定的运行依赖和 tdxpy wheel，
+> 再以 `--no-deps` 安装 mootdx wheel，避免安装器重新解析私有依赖来源。
 
 使用说明
 --------
@@ -93,6 +97,24 @@ client = Quotes.factory(market='std', multithread=True, heartbeat=True)
 # k 线数据
 client.bars(symbol='600036', frequency=9, offset=10)
 
+# 通达信服务端前复权/后复权 K 线，不请求外部复权因子
+client.adjusted_bars(symbol='600036', frequency=9, offset=10, adjust='qfq')
+client.adjusted_bars(symbol='600036', frequency=9, offset=10, adjust='hfq')
+
+# 固定周期支持 1m/5m/15m/30m/1h/day/week/mon/3mon/year；也支持扩展周期
+client.adjusted_bars(symbol='600036', frequency='10m', offset=1000, adjust='qfq')
+client.adjusted_bars(symbol='600036', frequency='2d', offset=1000, adjust='qfq')
+client.adjusted_bars(symbol='600036', frequency='5s', offset=1000, adjust='none')
+
+# 以指定日期为锚点的定点前复权
+client.adjusted_bars(
+    symbol='600036',
+    frequency=9,
+    offset=10,
+    adjust='fixed_qfq',
+    anchor_date='2024-06-03',
+)
+
 # 指数
 client.index(symbol='000001', frequency=9)
 
@@ -109,6 +131,10 @@ bj_stocks = client.stocks(market=consts.MARKET_BJ)
 # 查询沪、深、北市场的通达信行业分类码
 industry_codes = client.industry_codes()
 ```
+
+`adjusted_bars()` 直接使用通达信 `0x052d` 的复权参数，不请求外部复权因子。
+主站单次稳定返回最多 800 条，接口会对更大的 `offset` 自动分页；实际历史深度
+取决于证券、周期和所连接主站的留存范围，并受 16 位 `start` 字段约束。
 
 通达信财务数据读取
 
@@ -130,15 +156,15 @@ Affair.parse(downdir='tmp')
 
 推荐使用 uv 0.11.17 或更高版本在项目根目录创建独立、可复现的开发测试环境。
 `uv.lock` 已锁定运行依赖、默认测试依赖（包括 `freezegun`），以及 `xungeer/tdxpy` 的
-`v0.2.9` 标签与实际提交：
+`v0.3.0` 标签与实际提交：
 
 ```shell
 uv sync --locked
 uv run --locked pytest
 ```
 
-仓库通过 `.python-version` 固定日常开发基线为 Python 3.12；发布包仍支持
-Python 3.8 及以上版本，多版本兼容性继续由原有测试矩阵覆盖。
+仓库通过 `.python-version` 固定日常开发基线为 Python 3.12；发布包要求
+Python 3.10 及以上版本，多版本兼容性由测试矩阵覆盖。
 
 `tdxpy` 与 Poetry 原配置一样通过 GitHub SSH 获取；首次使用前需确保当前机器
 可以访问 `git@github.com`。修改依赖时，应同时维护标准 `[project]` / uv 配置和

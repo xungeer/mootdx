@@ -64,7 +64,7 @@ cov: clean-test
 	poetry run py.test -v --cov=mootdx --cov-report=html
 
 fmt:
-	black -l 120 -t py36 -t py37 -t py38 -t py39 -t py310 .
+	black -l 120 -t py310 .
 
 test: # run tests quickly with the default Python
 	@poetry run pytest tests

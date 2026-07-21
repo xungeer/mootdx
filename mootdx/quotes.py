@@ -15,6 +15,11 @@ from tenacity import wait_random
 from tqdm import tqdm
 
 from mootdx import config
+from mootdx.adjusted import ServerAdjustedTdxHqAPI
+from mootdx.adjusted import SERVER_ADJUSTED_BAR_BATCH_SIZE
+from mootdx.adjusted import normalize_adjust
+from mootdx.adjusted import normalize_anchor_date
+from mootdx.adjusted import normalize_period
 from mootdx.consts import MARKET_SH
 from mootdx.consts import MARKET_SZ
 from mootdx.consts import MARKET_BJ
@@ -233,6 +238,102 @@ class StdQuotes(BaseQuotes):
                 time.sleep(0.3)
         
         return to_data(all_data, symbol=symbol, client=self, **kwargs)
+
+    def adjusted_bars(
+        self,
+        symbol='000001',
+        frequency=9,
+        start=0,
+        offset=800,
+        adjust='qfq',
+        anchor_date=None,
+        **kwargs,
+    ):
+        """通过通达信 0x052d 服务端参数直接获取复权 K 线，不使用外部因子。"""
+        category, period_param = normalize_period(frequency)
+
+        if isinstance(start, bool) or not isinstance(start, int) or start < 0 or start > 0xFFFF:
+            raise ValueError('start 必须是 0 到 65535 之间的整数')
+        if isinstance(offset, bool) or not isinstance(offset, int) or offset <= 0:
+            raise ValueError('offset 必须是大于 0 的整数')
+        if not isinstance(symbol, str) or len(symbol) != 6 or not symbol.isascii():
+            raise ValueError('股票代码必须是 6 位 ASCII 字符')
+
+        batch_size = SERVER_ADJUSTED_BAR_BATCH_SIZE
+        max_offset = ((0xFFFF - start) // batch_size + 1) * batch_size
+        if offset > max_offset:
+            raise ValueError(f'当前 start 最多可分页获取 {max_offset} 条 K 线')
+
+        market = get_stock_market(symbol)
+        adjust_mode = normalize_adjust(adjust)
+        anchor_date_raw = normalize_anchor_date(anchor_date)
+
+        if adjust_mode in [3, 4] and not anchor_date_raw:
+            raise ValueError('定点复权必须提供 anchor_date')
+        if category == 13 and adjust_mode != 0:
+            raise ValueError('通达信秒线不支持服务端复权, adjust 必须为 none')
+
+        api = ServerAdjustedTdxHqAPI(
+            heartbeat=False,
+            auto_retry=self.client.auto_retry,
+            raise_exception=self.client.raise_exception,
+        )
+        ip, port = self.server
+
+        try:
+            if not api.connect(ip, int(port), time_out=self.timeout):
+                return to_data(None)
+
+            if offset <= batch_size:
+                result = api.get_server_adjusted_bars(
+                    category,
+                    int(market),
+                    str(symbol),
+                    int(start),
+                    int(offset),
+                    adjust_mode,
+                    anchor_date_raw,
+                    period_param,
+                )
+                return to_data(result, symbol=symbol, client=self, **kwargs)
+
+            all_data = []
+            remaining = offset
+            current_start = start
+
+            while remaining > 0:
+                batch_count = min(remaining, batch_size)
+                result = api.get_server_adjusted_bars(
+                    category,
+                    int(market),
+                    str(symbol),
+                    int(current_start),
+                    int(batch_count),
+                    adjust_mode,
+                    anchor_date_raw,
+                    period_param,
+                )
+
+                if not result:
+                    break
+
+                all_data = result + all_data
+                fetched = len(result)
+
+                if fetched < batch_count:
+                    break
+
+                remaining -= fetched
+                # 13/N 秒线从 start=0 翻到第二页时会包含上一页最旧记录，
+                # 仅首次需额外跳过一条；后续页恢复普通偏移语义。
+                current_start += fetched + (1 if category == 13 and current_start == 0 else 0)
+
+                if remaining > 0:
+                    time.sleep(0.3)
+
+            return to_data(all_data, symbol=symbol, client=self, **kwargs)
+        finally:
+            api.close()
 
     def stock_count(self, market=MARKET_SH):
         """
