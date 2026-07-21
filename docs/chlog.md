@@ -1,3 +1,8 @@
+# 旧版变更日志归档
+
+> 本页仅保留历史内容，不再维护，也不进入站点导航。当前唯一变更日志是
+> [版本历史](history.md)。
+
 ## v0.11.8 (2026-02-04)
 
 ### Fix
@@ -103,7 +108,7 @@
 
 ## v0.8.13 (2022-05-07)
 
-* [自定义版本增删改查](https://www.mootdx.com/zh_CN/latest/api/extras/#05)
+* [自定义板块增删改查](api/extras.md#custom-blocks)
 
 ## v0.8.7 (2021-01-28)
 
@@ -136,8 +141,8 @@
 
 ### Add
 
-* 添加交易日历列表数据 (说明文档: https://mootdx.readthedocs.io/zh_CN/latest/extras/#04)
-* 增加新浪复权因子数据接口，并对TDX行情接口数据进行复权计算(较慢, 已加缓存机制, 暂时过渡使用) (对应文档: https://mootdx.readthedocs.io/zh_CN/latest/quote1)
+* 添加交易日历列表数据（当前说明见[辅助工具](api/extras.md#calendar-tools)）
+* 增加新浪复权因子数据接口，并对TDX行情接口数据进行复权计算(较慢, 已加缓存机制, 暂时过渡使用)（当前说明见[标准行情](api/quote1.md#client-adjusted-bars)）
 
 ## v0.7.21 (2021-09-24)
 

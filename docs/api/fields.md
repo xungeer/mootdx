@@ -1,4 +1,18 @@
-## 财务数据字段对照表
+# 历史财务字段对照
+
+`Affair.parse()` 默认返回以 `code` 为索引的 DataFrame：第一列是 `report_date`，
+后续字段使用 `mootdx.financial.columns.columns` 中的中文名称。下方 `FINVALUE`
+编号 `0` 至 `580` 与当前实现的字段顺序对应。当前中文字段表仍保留三段未命名占位列：
+`col323`～`col400`、`col440`～`col500`、`col522`～`col560`。
+
+使用默认 `header='zh'` 时，服务端字段少于本地字段表会因列数不一致而抛出
+`ValueError`；服务端字段更多时，解析器会把多出的原始 `colN` 名称追加到字段表。
+需要绕开中文字段表并保留文件的实际列数时，请显式传 `header='raw'`。
+
+传 `header='raw'` 时，字段名为 `report_date`、`col1`、`col2`……。解析方法参见
+[历史财务文件](affair.md)。
+
+## `FINVALUE` 字段（接口返回）
 
 ```
 FINVALUE 专业财务数据（序列）
@@ -435,9 +449,14 @@ FINVALUE(ID),ID为数据编号
 578.--其中:子公司支付给少数股东的股利、利润(万元)
 579.--投资性房地产的折旧及摊销(万元)
 580.--信用减值损失(万元)
+```
 
+## `FINONE` 公式参考（不属于接口返回）
 
+`FINONE` 使用与 `FINVALUE` 相同的字段编号，但它是通达信公式系统的指定日期调用
+方式，不是 `Affair.parse()` 暴露的 Python 接口或额外返回列。
 
+```text
 FINONE 专业财务数据（指定日期）
 
 引用指定年和月日的某类型的财务数据.如果指标支持云数据函数,则不需要[专业财务数据]下载.
@@ -876,6 +895,15 @@ FINONE(ID,Y,MMDD),ID为数据编号,Y和MMDD表示年和月日.
 580.--信用减值损失(万元)
 
 
+```
+
+## 通达信公式参考（不属于接口返回）
+
+下面的 `GPJYVALUE`、`GPJYONE`、`BKJYVALUE`、`BKJYONE`、`SCJYVALUE`、
+`SCJYONE` 和 `GPONEDAT` 是通达信公式数据编号的历史参考，并不是
+`Affair.parse()` 或 `StdQuotes.finance()` 返回的字段。
+
+```text
 GPJYVALUE 股票交易类数据（序列）
 
 引用股票交易类数据.如果指标支持云数据函数,则不需要[专业财务数据]下载.

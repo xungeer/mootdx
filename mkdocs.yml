@@ -1,29 +1,38 @@
-site_name: MOOTDX
-site_description: 基于 Pytdx 数据接口的二次封装
+site_name: Mootdx
+site_description: 通达信在线行情、本地数据与财务数据的 Python 接口
+repo_name: xungeer/mootdx
+repo_url: https://github.com/xungeer/mootdx
 
 theme: readthedocs
 
+markdown_extensions:
+  - attr_list
+
 nav:
-  - 快速开始:
-    - 项目概述: index.md
-    - 安装说明: setup.md
-    - 快速上手: quick.md
-    - 修改日志: history.md
+  - 开始使用:
+      - 文档导航: index.md
+      - 安装与开发: setup.md
+      - 快速上手: quick.md
 
-  - 行情接口:
-    - 标准行情: api/quote1.md
-    - 扩展行情: api/quote2.md
-    - 数据读取: api/reader.md
-    - 财务数据: api/affair.md
-    - 财务对照: api/fields.md
-    - 辅助函数: api/extras.md
+  - Python API:
+      - API 概览: api/index.md
+      - 使用约定: api/conventions.md
+      - 标准行情: api/quote1.md
+      - 扩展行情: api/quote2.md
+      - 本地数据: api/reader.md
+      - 财务数据: api/affair.md
+      - 财务字段: api/fields.md
+      - 辅助工具: api/extras.md
 
-  - 命令行工具:
-    - 线路测试: cli/bestip.md
-    - 离线数据: cli/reader.md
-    - 行情数据: cli/quotes.md
-    - 财务数据: cli/affair.md
-    - 批量下载: cli/bundle.md
+  - CLI:
+      - CLI 概览: cli/index.md
+      - 服务器测速: cli/bestip.md
+      - 本地数据: cli/reader.md
+      - 在线行情: cli/quotes.md
+      - 财务数据: cli/affair.md
+      - 批量下载: cli/bundle.md
 
-  - 常见问题:
-    - "py_mini_racer 在 Mac ARM系统问题": faq/py_mini_racer.md
+  - 项目:
+      - 版本历史: history.md
+      - mini-racer 说明: faq/py_mini_racer.md
+      - 第三方声明: third-party.md

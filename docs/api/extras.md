@@ -1,158 +1,110 @@
-# 辅助工具函数
+# 辅助工具
 
-## 01. 获取同花顺复权数据
+本页记录当前仓库中可直接使用、但不属于 `Quotes` / `Reader` / `Affair` 主入口的
+辅助能力。它们可能访问第三方网络或修改本地通达信文件，调用前请留意每节的边界。
 
-可以按年份获取单只股票的复权行情数据 (自己计算复权蛋疼的不行，这个诸位先用着吧 😀)
-
-**参数说明: **
-
-- symbol: 股票代码。 `"600300"` 格式
-- factor: 前后复权。 `"00"`: 不复权, `"01"`: 前复权, `"02"`: 后复权
-- year: 获取数据的年份。 `"2021"` 格式, 默认当前年份
-
-返回值：
-
-- pd.DataFrame
-
-**调用方法：**
+## 同花顺年度复权数据
 
 ```python
 from mootdx.contrib.adjust import get_adjust_year
 
-get_adjust_year(symbol='000001', year='2021', factor='01')
+data = get_adjust_year(
+    symbol='600036',
+    year=2024,
+    factor='before',
+)
 ```
 
-以下为返回内容格式
+`get_adjust_year(symbol, year=None, factor='00')` 访问同花顺 HTTP 接口并返回
+DataFrame。尽管函数默认值仍是 `00`，当前实现只接受：
 
-```shell
-Out[2]:
-             open   high    low  close     volume         amount adjust
-date
-2021-01-04  18.92  18.92  18.26  18.42  155421640  2891682300.00  0.801
-2021-01-05  18.22  18.30  17.62  17.99  182135210  3284606900.00  0.939
-2021-01-06  17.90  19.38  17.82  19.38  193494510  3648521900.00  0.997
-2021-01-07  19.34  19.80  19.05  19.72  158418530  3111274600.00  0.816
-2021-01-08  19.72  19.92  19.13  19.67  119547322  2348316400.00  0.616
-...           ...    ...    ...    ...        ...            ...    ...
-2021-09-02  18.00  18.78  17.80  18.40  242260350  4454545300.00  1.248
-2021-09-03  18.50  18.50  17.70  18.04  139481870  2523273200.00  0.719
-2021-09-06  17.93  18.60  17.78  18.45  151522560  2780281100.00  0.781
-2021-09-07  18.60  19.56  18.35  19.24  162234420  3067365700.00  0.836
-2021-09-08  19.24  19.55  19.10  19.31   88944393  1716830500.00  0.458
+- `before` 或 `01`：前复权；
+- `after` 或 `02`：后复权。
 
-[168 rows x 7 columns]
-```
+其他值（包括默认 `00`）会记录警告并返回空 DataFrame。常见 HTTP、连接或限频解析
+失败会在当前调用中被捕获并返回空 DataFrame；只有未被函数内部捕获的异常才可能由
+外层重试装饰器再次调用。
 
-## 02. TDX导出数据转为 pandas 可用的 csv 文件
+标准市场 K 线优先使用 `StdQuotes.adjusted_bars()`，它直接请求通达信服务端复权，
+不依赖第三方复权数据。参见[标准行情](quote1.md#server-adjusted-bars)。
 
-将TDX通过数据工具导出的txt文件转换为标准的csv文件(其实不转回pandas 也可以读取，只是使用时候比较麻烦)
+## 通达信导出文本转 CSV
 
-**参数说明: **
-
-- infile: 输入文件
-- outfile: 转换后的文件，可为空
-
-返回值：
-
-- pd.DataFrame
-
-**调用方法：**
+### 单文件
 
 ```python
 from mootdx.tools import tdx2csv
 
-tdx2csv.txt2csv(infile='sz#000001.txt', outfile='sz#000001.csv')
+data = tdx2csv.txt2csv(
+    infile='C:/tdx/export/SH#600036.txt',
+    outfile='C:/tdx/export/SH#600036.csv',
+)
 ```
 
-## 03. TDX导出数据转为 pandas 可用的 csv 文件(批量异步接口)
+`txt2csv()` 按通达信导出文本格式读取 GBK 文件，返回以 `date` 为索引的 DataFrame。
+未传 `outfile` 时默认将输入文件的 `.txt` 替换为 `.csv`。输入不存在或无法解析时返回
+空 DataFrame。
 
-将TDX通过数据工具导出的txt文件转换为标准的csv文件(其实不转回pandas 也可以读取，只是使用时候比较麻烦)
+只有目标文件的父目录已经存在时才会写出 CSV；函数不会自动创建目标目录。
 
-**参数说明: **
-
-- src: 要换行的目录(tdx导出文件目录)
-- dst: 转换后的目录
-
-返回值：
-
-- None
-
-**调用方法：**
+### 批量转换
 
 ```python
-from mootdx.tools import tdx2csv
-
-tdx2csv.batch(src='c:/tdx/export', dst='c:/tdx/output')
+tdx2csv.batch(
+    src='C:/tdx/export',
+    dst='C:/tdx/output',
+)
 ```
 
-## 04. 交易日是否法定节假日
+`batch()` 异步处理 `src` 目录下所有 `.txt`。当前实现保留了 `dst` 参数但没有使用它，
+生成的 `.csv` 实际写在源文件旁边。不要依赖 `dst` 选择输出目录。
 
-参数说明:
-
-- date: 日期, 字符格式
-- format_: 日期格式 默认: %Y-%m-%d (e: 2010-01-01)
-- country: 国家, 默认: 中国
-
-返回值：
-
-- 布尔值, True 为法定节假日, False 不是法定节假日
-
-**调用方法：**
+## 日期与节假日 {#calendar-tools}
 
 ```python
 from mootdx.utils import holiday
 
-# 判断一个日期是否是法定节假日 （tdx接口）
-holiday.holiday(date='20200202', format_='%Y%m%d', country='中国')
-
-# 判断一个日期是否是法定节假日
-holiday.holiday(date='2020-02-02')
-
-# 判断当天日期是否是法定节假日（date的值空为当天日期）
-holiday.holiday()
-
-# 判断一个日期是否是法定节假日（sina接口）
-holiday.holiday2(date='2020-02-02')
-
-# 判断当天日期是否是法定节假日（date的值空为当天日期）
-holiday.holiday()
+is_holiday = holiday.holiday(date='2026-10-01')
+row = holiday.holiday_(date='2026-10-01')
+trading_days = holiday.holidays()
+one_trading_day = holiday.holiday2(date='2026-07-21')
 ```
 
-<a href="#05"></a>
+这些名称的口径不同：
 
-## 05. 新版自定义板块操作
+| 接口 | 实际返回 |
+| --- | --- |
+| `holiday()` | 日期是法定节假日或周末时为 `True`；否则为 `False` |
+| `holiday_()` | 对应节假日记录的 DataFrame |
+| `holidays()` | 从新浪数据解码得到的历史交易日 DataFrame |
+| `holiday2()` | 全部交易日，或指定日期对应的交易日 DataFrame |
 
-参数说明:
+函数会访问通达信网站或新浪接口并使用本地缓存；它们不是无需更新的静态交易日历。
+`holidays()` 依赖安装包中的 `mini-racer` 运行 JavaScript 解码逻辑；导入问题参见
+[mini-racer 依赖说明](../faq/py_mini_racer.md)。
 
-- name: 板块名称
-- symbol: 股票代码列表
-- tdxdir: 通达信的安装目录
+## 自定义板块 {#custom-blocks}
 
-返回值：
-
-- 布尔值, True 成功, False 失败
-
-**调用方法：**
+`Customize` 直接读写通达信 `T0002/blocknew` 目录：
 
 ```python
 from mootdx.tools.customize import Customize
 
-# 初始化一个自定义版本操作对象, tdxdir 可根据具体情况修改
 custom = Customize(tdxdir='C:/new_tdx')
 
-# 新建自定义板块
-custom.create(name='龙虎榜', symbol=['600036', '600016'])
-
-# 再创建一个, 板块名称不能重复
-custom.create(name='优质股', symbol=['600036', '600016'])
-
-# 修改自定义板块
-custom.update(name='龙虎榜', symbol=['600036', '600016'])
-
-# 查询自定义板块
-custom.search(name='龙虎榜')
-
-# 删除指定名称的自定义板块
-custom.remove(name='龙虎榜')
-
+custom.create(name='示例板块', symbol=['600036', '000001'])
+custom.update(name='示例板块', symbol=['688001'])
+codes = custom.search(name='示例板块')
+all_blocks = custom.search(group=True)
+custom.remove(name='示例板块')
 ```
+
+| 方法 | 返回与副作用 |
+| --- | --- |
+| `create()` | 写入配置和 `.blk` 文件；通常成功时返回 `True`，名称重复时抛异常 |
+| `update()` | 未传名称时返回 `False`；名称不存在时创建并返回 `True`；更新已有板块时返回写入的字符数 |
+| `search()` | 指定名称时返回代码列表或 `None`；未指定时返回 DataFrame |
+| `remove()` | 删除 `.blk` 并改写配置；返回写入字节数或 `None` |
+
+目录必须已经存在。`remove()` 是破坏性操作，建议先备份 `T0002/blocknew`。只需要创建
+或查询板块时，也可以使用 `StdReader.block_new()`，参见[离线行情](reader.md#block-files)。

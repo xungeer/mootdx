@@ -1,3 +1,12 @@
+## [Unreleased]
+
+### Changed
+
+- 将配套 `tdxpy` v0.3.0 协议实现等价内收至 Mootdx，并保留第三方 MIT 许可证与源码归属声明
+- 移除对私有 Git `tdxpy` 仓库的安装依赖，源码开发、构建和 wheel 安装不再需要 GitHub SSH 权限
+- 本次内收不改变现有公共 API、参数、返回结构或运行行为
+- 按当前 Python API 与 CLI 实现重构文档导航、安装指南和接口参考，移除失效入口与过期功能描述
+
 ## v0.12.0 (2026-07-21)
 
 ### Feat
@@ -204,7 +213,7 @@
 
 ## v0.8.13 (2022-05-07)
 
-* [自定义版本增删改查](https://www.mootdx.com/zh_CN/latest/api/extras/#05)
+* [自定义板块增删改查](api/extras.md#custom-blocks)
 
 ## v0.8.7 (2021-01-28)
 
@@ -237,8 +246,8 @@
 
 ### Add
 
-* 添加交易日历列表数据 (说明文档: https://mootdx.readthedocs.io/zh_CN/latest/extras/#04)
-* 增加新浪复权因子数据接口，并对TDX行情接口数据进行复权计算(较慢, 已加缓存机制, 暂时过渡使用) (对应文档: https://mootdx.readthedocs.io/zh_CN/latest/quote1)
+* 添加交易日历列表数据（当前说明见[辅助工具](api/extras.md#calendar-tools)）
+* 增加新浪复权因子数据接口，并对TDX行情接口数据进行复权计算(较慢, 已加缓存机制, 暂时过渡使用)（当前说明见[标准行情](api/quote1.md#client-adjusted-bars)）
 
 ## v0.7.21 (2021-09-24)
 
