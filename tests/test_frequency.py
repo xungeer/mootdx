@@ -4,6 +4,8 @@ from mootdx.quotes import Quotes
 from mootdx.utils import FREQUENCY
 
 
+pytestmark = pytest.mark.online
+
 @pytest.fixture(scope='function')
 def client():
     return Quotes.factory(market='std')

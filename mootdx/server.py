@@ -5,9 +5,9 @@ import socket
 import time
 from functools import partial
 
-from tdxpy.constants import hq_hosts
-from tdxpy.exhq import TdxExHq_API
-from tdxpy.hq import TdxHq_API
+from mootdx._protocol.constants import hq_hosts
+from mootdx._protocol.exhq import TdxExHq_API
+from mootdx._protocol.hq import TdxHq_API
 
 from mootdx.consts import CONFIG
 from mootdx.consts import EX_HOSTS

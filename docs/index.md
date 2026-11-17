@@ -1,31 +1,31 @@
-# 项目概述
+# Mootdx 文档
 
-Mootdx 是一款纯 Python 语言开发的类似 TDX 的行情数据接口的实现。
+Mootdx 提供通达信在线行情、本地数据文件和专业财务数据的 Python 接口。
+支持 Python `>=3.10,<4.0`，通达信协议层已经内置，无需单独安装 `tdxpy`。
 
-- 在线文档: [https://www.mootdx.com](https://www.mootdx.com)
-- 国内镜像: [https://gitee.com/ibopo/mootdx](https://gitee.com/ibopo/mootdx)
-- 项目仓库: [https://github.com/mootdx/mootdx](https://github.com/mootdx/mootdx)
+## 按任务查找文档
 
-## 项目特点
+| 目标 | 文档 |
+| --- | --- |
+| 安装 Mootdx 或配置开发环境 | [安装与开发](setup.md) |
+| 完成第一次在线行情请求 | [快速上手](quick.md) |
+| 从旧版本迁移依赖、导入与连接行为 | [升级到 v0.13.0](upgrade-0.13.md) |
+| 了解公共参数、返回值和异常约定 | [API 使用约定](api/conventions.md) |
+| 获取沪深北标准行情与服务端复权 K 线 | [标准行情 API](api/quote1.md) |
+| 获取期货、港股等扩展市场行情 | [扩展行情 API](api/quote2.md) |
+| 读取本地日线、分钟线和板块文件 | [本地数据 API](api/reader.md) |
+| 下载或解析历史专业财务文件 | [财务数据 API](api/affair.md) |
+| 查阅财务字段含义 | [财务字段对照](api/fields.md) |
+| 使用转换、节假日和自定义板块工具 | [辅助工具 API](api/extras.md) |
+| 使用服务器测速、行情或财务命令 | [命令行工具](cli/index.md) |
+| 查看版本变化 | [版本历史](history.md) |
+| 查看内置协议层来源与许可证 | [第三方声明](third-party.md) |
 
-- 基于 `pytdx` 二次封装。
-- 完全支持 `3.6+`
-- 支持全平台 `Windows / MacOS / Linux`
-- 更加友好的API接口
-- 自动匹配最优服务器
+## 使用前须知
 
-## 运行环境
+- 在线行情和财务下载依赖可访问的通达信服务，实际可取数据由所连接服务器决定。
+- 本地读取接口需要已有的通达信数据目录，不负责安装通达信客户端或生成本地数据。
+- 项目不提供投资建议；使用数据时请遵守数据提供方条款及适用法律法规。
 
-- 操作系统: `Windows / MacOS / Linux` 都可以运行.
-- Python: `3.6` 以及以上版本, 不支持`python2`.
-- 依赖库: `pytdx>=1.67` (之后会转向使用`tdxpy`)
-
-## 快速安装
-
-```shell
-pip install -U mootdx
-```
-
-## 多种运行
-
-我们提供了方便命令行调试和导出数据的命令行工具。
+项目源码与问题跟踪位于
+[GitHub 仓库](https://github.com/xungeer/mootdx)。

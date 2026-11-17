@@ -1,112 +1,118 @@
-## 离线数据接口
+# 离线行情：`Reader`
 
-通过下面的接口，我们可以解析日K线文件，该文件可以通过读取软件本地目录导出的数据获取，也可以从官网上下载， 如果您安装了终端，可以在安装目录下找到 `vipdoc` 子目录。
-
-比如我的客户端安装在 `c:\new_tdx` 下，
-
-即
-
-- `C:/new_tdx/vipdoc/sz/lday/` 下是深圳的日k线数据
-- `C:/new_tdx/vipdoc/sh/lday/` 下是上海的日k线数据
-
-该目录下每个股票为一个文件，如 `sz000001.day` 为深圳的日k行情，
-
-### 01. 读取行情接口
+`Reader` 解析通达信客户端数据目录中的原始行情文件。原始文件读取不连接行情主站；
+只有 `daily(..., adjust='qfq'/'hfq')` 的客户端复权路径会联网。入口是
+`Reader.factory()`；`tdxdir` 必须指向一个已经存在的通达信目录。
 
 ```python
 from mootdx.reader import Reader
 
 reader = Reader.factory(market='std', tdxdir='C:/new_tdx')
-
-# 读取日线数据
-reader.daily(symbol='600036')
-
-# 读取1分钟数据
-reader.minute(symbol='600036')
-
-# 读取5分钟数据
-reader.fzline(symbol='600036')
 ```
 
-## 02. 读取扩展行情
+如果目录不存在，构造 `Reader` 时会立即抛出异常。`market='ext'` 创建扩展市场读取器；
+其他值都会回落到标准市场读取器，因此建议只使用 `std` 或 `ext`。
 
-> 读取扩展行情的日线（如期货，期权，现货等）
+## 数据目录
+
+标准市场文件通常位于：
+
+```text
+C:/new_tdx/
+└── vipdoc/
+    ├── sh/
+    │   ├── lday/sh600000.day
+    │   ├── minline/sh600000.lc1
+    │   └── fzline/sh600000.lc5
+    ├── sz/
+    └── bj/
+```
+
+扩展市场文件位于 `vipdoc/ds/`，代码使用 `市场 ID#品种代码`，例如
+`4#CF7D0LAO`。读取器会根据证券代码、目录和扩展名查找文件；它不解析通达信“数据
+导出”功能生成的文本文件，文本转换请参见[辅助工具](extras.md)。
+
+## 标准市场行情
+
+### 日线
 
 ```python
-
-from mootdx.reader import Reader
-
-reader = Reader.factory(market='ext', tdxdir='c:/new_tdx')
-reader.daily(symbol='29#A1801')
+daily = reader.daily(symbol='600036')
 ```
 
-## 03. 历史分钟数据
+`daily()` 读取 `.day` 文件并返回 `pandas.DataFrame`。文件不存在时返回空
+DataFrame。代码可以带 `sh`、`sz`、`bj` 前缀；未带前缀时由代码规则推断市场。
 
-> 读取分钟K线（目前支持1，5分钟k线）
-
-分钟线有两种格式，第一种是`.1` `.5` 为后缀的, 还有一种为 `.lc1` `.lc5` 后缀的. 不过不用考虑，接口会自动判断
+`daily()` 还接受 `adjust='qfq'` 或 `adjust='hfq'`：
 
 ```python
-from mootdx.reader import Reader
-
-reader = Reader.factory(market='std', tdxdir='c:/new_tdx')
-reader.minute(symbol='000001', suffix='1')  # suffix = 1 一分钟，5 五分钟
+qfq = reader.daily(symbol='600036', adjust='qfq')
 ```
 
-扩展数据接口读取方式
+这条路径会联网查询通达信除权除息数据并缓存到 `~/.mootdx/xdxr/`，随后还会从新浪
+获取复权因子并缓存到 `~/.mootdx/caches/factor/`。因此“读取本地日线并复权”不是
+纯离线操作。只读取原始文件时不要传 `adjust`。
+
+### 一分钟线和五分钟线
 
 ```python
-from mootdx.reader import Reader
+one_minute = reader.minute(symbol='600036', suffix=1)
+five_minutes = reader.minute(symbol='600036', suffix=5)
 
-reader = Reader.factory(market='ext', tdxdir='c:/new_tdx')
-reader.minute(symbol='000001', suffix='1')  # suffix = 1 一分钟，5 五分钟
+# fzline() 等价于 minute(..., suffix=5)
+five_minutes = reader.fzline(symbol='600036')
 ```
 
-## 04. 读取板块信息
+`suffix=5` 查找 `fzline` 下的 `.lc5` 或 `.5` 文件；其他值查找 `minline` 下的
+`.lc1` 或 `.1` 文件。找到文件时返回 DataFrame，未找到时返回 `None`。
 
-文件位置参考： [http://blog.sina.com.cn/s/blog_623d2d280102vt8y.html](http://blog.sina.com.cn/s/blog_623d2d280102vt8y.html)
+## 板块文件 {#block-files}
 
-样例代码：
+`block()` 解析 `T0002/hq_cache` 下的板块或配置文件：
 
 ```python
-from mootdx.reader import Reader
-
-reader = Reader.factory(market='std', tdxdir='c:/new_tdx')
-reader.block(symbol='block_zs', group=False)
+concepts = reader.block(symbol='block_gn.dat')
+grouped = reader.block(symbol='block_gn.dat', group=True)
 ```
+
+常见文件包括 `block_gn.dat`、`block_fg.dat`、`block_zs.dat`、`hkblock.dat`、
+`tdxhy.cfg` 和 `tdxzs.cfg`。返回值取决于文件类型和 `group`，可能是 DataFrame、
+字典或 `None`。
+
+`block_new()` 操作 `T0002/blocknew` 下的自定义板块：
 
 ```python
-# 分组格式
-from mootdx.reader import Reader
-reader = Reader.factory(market='std', tdxdir='c:/new_tdx')
+# 创建板块；目录必须已经存在
+reader.block_new(name='自选示例', symbol=['600036', '000001'])
 
-reader.block(symbol='block_zs', group=True)
+# 查询指定板块，返回代码列表或 None
+codes = reader.block_new(name='自选示例')
+
+# 查询全部板块，返回 DataFrame
+blocks = reader.block_new(group=True)
 ```
 
-## 05. 自定义板块数据
+创建操作会修改通达信本地文件；调用前请自行备份 `T0002/blocknew`。
 
-> 读取自定义板块信息文件夹
+## 扩展市场文件
 
 ```python
-import mootdx.block
-from mootdx.reader import Reader
+ext = Reader.factory(market='ext', tdxdir='C:/new_tdx')
 
-reader = Reader.factory(market='std', tdxdir='C:/new_tdx')
-
-# 默认扁平格式
-reader.block_new()
-
-# 分组格式
-reader.block_new(group=True)
+daily = ext.daily(symbol='4#CF7D0LAO')
+minute = ext.minute(symbol='4#CF7D0LAO')
+five_minutes = ext.fzline(symbol='4#CF7D0LAO')
 ```
 
-写入新板块
+扩展读取器提供 `daily()`、`minute()` 和 `fzline()`，但 `minute()` 没有 `suffix`
+参数。代码必须能映射到 `vipdoc/ds` 中的真实文件名。`daily()`、`minute()` 在文件
+不存在时返回 `None`；当前 `fzline()` 不会预先保护缺失路径，调用前应确认对应
+`.lc5` 文件存在。
 
-```python
-# 写入新板块
-import mootdx.block
-from mootdx.reader import Reader
+## 返回值差异
 
-reader = Reader.factory(market='std', tdxdir='C:/new_tdx')
-reader.block_new(name='最优盈利板块', symbol=['600001', '600002', '600003', '600004', ])
-```
+- `StdReader.daily()` 经过统一转换，空结果是空 DataFrame。
+- 标准分钟线和多数扩展读取接口在文件不存在时返回 `None`。
+- 成功读取的行情数据以时间为索引；具体列由文件格式决定。
+- 本页面只描述 `Reader` 的高层公开入口，`mootdx._protocol.reader` 属于内部实现，
+  不承诺兼容性。

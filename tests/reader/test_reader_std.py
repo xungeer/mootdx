@@ -15,9 +15,9 @@ def reader():
         ('000000', '', True),
         ('sh881478', '', False),
         ('881478', '', False),
-        ('688001', 'qfq', False),
-        ('000001', 'qfq', False),
-        ('127021', 'qfq', False),
+        pytest.param('688001', 'qfq', False, marks=pytest.mark.online),
+        pytest.param('000001', 'qfq', False, marks=pytest.mark.online),
+        pytest.param('127021', 'qfq', False, marks=pytest.mark.online),
     ])
 def test_daily(reader, symbol, adjust, empty):
     result = reader.daily(symbol=symbol, adjust=adjust)
@@ -30,6 +30,7 @@ def test_daily(reader, symbol, adjust, empty):
         ('000001', 'qfq', False),
         ('127021', 'qfq', False),
     ])
+@pytest.mark.online
 def test_daily_qfq(reader, symbol, adjust, empty):
     result = reader.daily(symbol=symbol, adjust=adjust)
     assert is_empty(result) is empty
@@ -41,6 +42,7 @@ def test_daily_qfq(reader, symbol, adjust, empty):
         ('000001', 'hfq', False),
         ('127021', 'hfq', False),
     ])
+@pytest.mark.online
 def test_daily_hfq(reader, symbol, adjust, empty):
     result = reader.daily(symbol=symbol, adjust=adjust)
     assert is_empty(result) is empty

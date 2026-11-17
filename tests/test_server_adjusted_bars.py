@@ -5,6 +5,7 @@ import pytest
 
 from mootdx.adjusted import normalize_period
 from mootdx.consts import FREQUENCY as PUBLIC_FREQUENCY
+from mootdx.exceptions import MootdxDataException
 from mootdx.quotes import StdQuotes
 from mootdx.utils import FREQUENCY as RUNTIME_FREQUENCY
 
@@ -41,7 +42,8 @@ def test_public_frequency_table_matches_runtime_and_protocol_categories():
     assert [normalize_period(frequency)[0] for frequency in PUBLIC_FREQUENCY] == list(range(12))
 
 
-def test_adjusted_bars_routes_adjustment_to_tdx_server(monkeypatch):
+@pytest.mark.parametrize('max_retries', [None, 0, 1])
+def test_adjusted_bars_routes_adjustment_to_tdx_server(monkeypatch, max_retries):
     class LegacyClient:
         auto_retry = True
         raise_exception = False
@@ -95,18 +97,34 @@ def test_adjusted_bars_routes_adjustment_to_tdx_server(monkeypatch):
 
     client = object.__new__(StdQuotes)
     client.client = LegacyClient()
+    if max_retries is not None:
+        client.client.max_retries = max_retries
     client.server = ('116.205.183.150', 7709)
     client.timeout = 6
 
     result = client.adjusted_bars(symbol='600036', frequency=9, offset=1, adjust='qfq')
 
     server_client = ServerClient.instances[0]
+    assert server_client.kwargs == {
+        'heartbeat': False,
+        'auto_retry': True,
+        'raise_exception': False,
+        'max_retries': 4 if max_retries is None else max_retries,
+    }
     assert server_client.connection == ('116.205.183.150', 7709, 6)
     assert server_client.calls == [(9, 1, '600036', 0, 1, 1, 0, 1)]
     assert server_client.closed is True
     assert result.iloc[0].close == 10.2
     assert result.iloc[0].volume == 100.0
     assert 'factor' not in result.columns
+    metadata = result.attrs['mootdx']
+    assert metadata['instrument_id'] == 'SH.600036'
+    assert metadata['category'] == 9
+    assert metadata['adjust_mode'] == 'qfq'
+    assert metadata['adjustment_basis'] == 'server_latest'
+    assert metadata['point_in_time'] is False
+    assert metadata['fact_table_eligible'] is False
+    assert metadata['volume_semantics'] == 'tdx_protocol_native_unadjusted'
 
 
 @pytest.mark.parametrize(
@@ -141,15 +159,22 @@ def test_adjusted_bars_normalizes_and_forwards_fixed_anchor_date(monkeypatch, ad
     client.server = ('116.205.183.150', 7709)
     client.timeout = 6
 
-    client.adjusted_bars(
-        symbol='600036',
-        frequency='15m',
-        offset=1,
-        adjust=adjust,
-        anchor_date=datetime(2024, 6, 3, 12, 30),
-    )
+    with pytest.warns(UserWarning, match='不是历史知识截止日'):
+        result = client.adjusted_bars(
+            symbol='600036',
+            frequency='15m',
+            offset=1,
+            adjust=adjust,
+            anchor_date=datetime(2024, 6, 3, 12, 30),
+        )
 
     assert ServerClient.calls == [(1, 1, '600036', 0, 1, expected_mode, 20240603, 1)]
+    metadata = result.attrs['mootdx']
+    assert metadata['adjust_mode'] == adjust
+    assert metadata['anchor_date'] == 20240603
+    assert metadata['anchor_date_semantics'] == 'price_anchor'
+    assert metadata['point_in_time'] is False
+    assert metadata['fact_table_eligible'] is False
 
 
 def test_adjusted_bars_keeps_paged_history_in_time_order(monkeypatch):
@@ -298,3 +323,107 @@ def test_adjusted_bars_validates_request_before_connecting(kwargs, message):
 
     with pytest.raises(ValueError, match=message):
         client.adjusted_bars(**kwargs)
+
+
+def test_adjusted_bars_rejects_connection_failure_and_closes_client(monkeypatch):
+    class LegacyClient:
+        auto_retry = False
+        raise_exception = False
+
+    class ServerClient:
+        instances = []
+
+        def __init__(self, **kwargs):
+            self.closed = False
+            self.instances.append(self)
+
+        def connect(self, ip, port, time_out):
+            return False
+
+        def close(self):
+            self.closed = True
+
+    monkeypatch.setattr('mootdx.quotes.ServerAdjustedTdxHqAPI', ServerClient)
+
+    client = object.__new__(StdQuotes)
+    client.client = LegacyClient()
+    client.server = ('116.205.183.150', 7709)
+    client.timeout = 6
+
+    with pytest.raises(MootdxDataException, match='服务端复权连接 请求失败'):
+        client.adjusted_bars(symbol='600036', offset=1, adjust='none')
+
+    assert ServerClient.instances[0].closed is True
+
+
+def test_adjusted_bars_rejects_failed_response(monkeypatch):
+    class LegacyClient:
+        auto_retry = False
+        raise_exception = False
+
+    class ServerClient:
+        def __init__(self, **kwargs):
+            pass
+
+        def connect(self, ip, port, time_out):
+            return self
+
+        def get_server_adjusted_bars(self, *args):
+            return None
+
+        def close(self):
+            pass
+
+    monkeypatch.setattr('mootdx.quotes.ServerAdjustedTdxHqAPI', ServerClient)
+
+    client = object.__new__(StdQuotes)
+    client.client = LegacyClient()
+    client.server = ('116.205.183.150', 7709)
+    client.timeout = 6
+
+    with pytest.raises(MootdxDataException, match='服务端复权K线 请求失败'):
+        client.adjusted_bars(symbol='600036', offset=1, adjust='none')
+
+
+def test_adjusted_bars_rejects_failed_later_page(monkeypatch):
+    class LegacyClient:
+        auto_retry = False
+        raise_exception = False
+
+    class ServerClient:
+        def __init__(self, **kwargs):
+            self.calls = 0
+
+        def connect(self, ip, port, time_out):
+            return self
+
+        def get_server_adjusted_bars(self, *args):
+            self.calls += 1
+            if self.calls == 1:
+                return [
+                    {
+                        'open': 10.0,
+                        'close': 10.0,
+                        'high': 10.0,
+                        'low': 10.0,
+                        'vol': 100.0,
+                        'amount': 1000.0,
+                        'datetime': '2024-06-03 15:00',
+                    }
+                    for _ in range(800)
+                ]
+            return None
+
+        def close(self):
+            pass
+
+    monkeypatch.setattr('mootdx.quotes.ServerAdjustedTdxHqAPI', ServerClient)
+    monkeypatch.setattr('mootdx.quotes.time.sleep', lambda seconds: None)
+
+    client = object.__new__(StdQuotes)
+    client.client = LegacyClient()
+    client.server = ('116.205.183.150', 7709)
+    client.timeout = 6
+
+    with pytest.raises(MootdxDataException, match='服务端复权K线分页 请求失败'):
+        client.adjusted_bars(symbol='600036', offset=801, adjust='none')

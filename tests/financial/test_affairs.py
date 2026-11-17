@@ -8,6 +8,8 @@ from mootdx.affair import Affair
 from mootdx.logger import logger
 
 
+pytestmark = pytest.mark.online
+
 @pytest.mark.skip(reason='暂时不做重复测试')
 class TestAffair(unittest.TestCase):
     files = []

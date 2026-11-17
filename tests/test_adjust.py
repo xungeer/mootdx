@@ -2,6 +2,9 @@ import datetime
 import os
 import time
 import unittest
+from unittest.mock import patch
+
+import pandas as pd
 from datetime import timedelta
 from pathlib import Path
 
@@ -13,6 +16,7 @@ from mootdx.utils.adjust import get_xdxr
 
 
 @pytest.mark.skip(reason='暂时不做重复测试')
+@pytest.mark.online
 class TestAdjust(unittest.TestCase):
     def test_adjust_before0(self):
         data = get_adjust_year(symbol='600000', year='2018', factor='before')
@@ -33,6 +37,19 @@ class TestAdjust(unittest.TestCase):
     def test_adjust_after1(self):
         data = get_adjust_year(symbol='600000', year='2018', factor='02')
         self.assertFalse(data.empty)
+
+
+@pytest.fixture(autouse=True)
+def fake_xdxr_provider(monkeypatch, tmp_path):
+    import mootdx.utils.adjust as adjust
+    monkeypatch.setattr(adjust, 'get_config_path', lambda name: str(tmp_path / Path(name).name))
+    # The tests inspect their own imported helper as well.
+    monkeypatch.setattr(__import__(__name__, fromlist=['get_config_path']),
+                        'get_config_path', lambda name: str(tmp_path / Path(name).name))
+    frame = pd.DataFrame([{'year': 2026, 'month': 1, 'day': 5, 'category': 1}])
+    with patch.object(adjust.Quotes, 'factory') as factory:
+        factory.return_value.xdxr.side_effect = lambda **kwargs: frame.copy()
+        yield factory
 
 
 class TestAdjustUtil(unittest.TestCase):

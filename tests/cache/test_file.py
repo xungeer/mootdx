@@ -1,5 +1,6 @@
 import datetime
 import unittest
+import tempfile
 from pathlib import Path
 from unittest import mock
 
@@ -26,8 +27,9 @@ def sample_function() -> pd.DataFrame:
 
 class TestCacheFile(unittest.TestCase):
     def setUp(self) -> None:
-        self.filepath = 'sample.pkl'
-        Path(self.filepath).unlink(missing_ok=True)
+        temporary = tempfile.TemporaryDirectory(prefix='mootdx-cache-test-')
+        self.addCleanup(temporary.cleanup)
+        self.filepath = str(Path(temporary.name) / 'sample.pkl')
 
     @mock.patch('pandas.DataFrame.to_pickle')
     def test_caches_if_not_exists(self, mock_file: mock.MagicMock) -> None:

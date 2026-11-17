@@ -1,0 +1,409 @@
+{
+  "started_at": "2026-11-11T01:04:22.080645+08:00",
+  "capture_location": "Python socket.send/recv boundary before BaseParser header unpacking/decompression, plus parser input after decompression; not a TCP packet capture",
+  "sources": "Same installed source hashes and packages as environment.json",
+  "cases": [
+    {
+      "host": "110.41.147.114",
+      "port": 7709,
+      "strategy": "12",
+      "events": [
+        {
+          "parser": "SetupCmd1",
+          "category": null,
+          "send_chunks": [
+            {
+              "timestamp": "2026-11-11T01:04:22.081265+08:00",
+              "hex": "0c0218930001030003000d0001"
+            }
+          ],
+          "recv_chunks": [
+            {
+              "timestamp": "2026-11-11T01:04:22.372827+08:00",
+              "requested": 16,
+              "hex": "b1cb74001c02189300000d005200bd00"
+            },
+            {
+              "timestamp": "2026-11-11T01:04:22.372931+08:00",
+              "requested": 82,
+              "hex": "789c6378c5cecdcdc2c82062c5b4898987b9050ed1f90cdf344c19a5bd18c1b40c90fecff09c81819191f13fc3c977b76f9d5e7dfefeb5ef57f71932500b30034d67503ebb62cbfb0b4771280100eaf21db7"
+            }
+          ],
+          "parser_input_hex": "00ea070b0b040100143a02b2020c03840384038403840384033a02b2020c038403840384038403840300f62835011b4a0100f62835011c4a0100ff00e70000010101ff00c9eedbdacbabcfdfd6f7d5be3100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000030000010023cda8b4efd0c50000000000000000000000000000000000000000000000",
+          "request_hex": "0c0218930001030003000d0001",
+          "wire_response_hex": "b1cb74001c02189300000d005200bd00789c6378c5cecdcdc2c82062c5b4898987b9050ed1f90cdf344c19a5bd18c1b40c90fecff09c81819191f13fc3c977b76f9d5e7dfefeb5ef57f71932500b30034d67503ebb62cbfb0b4771280100eaf21db7",
+          "header_hex": "b1cb74001c02189300000d005200bd00",
+          "header_fields_IIIHH": [
+            7654321,
+            2467824156,
+            851968,
+            82,
+            189
+          ],
+          "compressed_body_hex": "789c6378c5cecdcdc2c82062c5b4898987b9050ed1f90cdf344c19a5bd18c1b40c90fecff09c81819191f13fc3c977b76f9d5e7dfefeb5ef57f71932500b30034d67503ebb62cbfb0b4771280100eaf21db7",
+          "wire_body_length_matches": true,
+          "uncompressed_length_matches": true,
+          "parser_input_matches": true
+        },
+        {
+          "parser": "SetupCmd2",
+          "category": null,
+          "send_chunks": [
+            {
+              "timestamp": "2026-11-11T01:04:22.373092+08:00",
+              "hex": "0c0218940001030003000d0002"
+            }
+          ],
+          "recv_chunks": [
+            {
+              "timestamp": "2026-11-11T01:04:22.416651+08:00",
+              "requested": 16,
+              "hex": "b1cb74001c02189400000d005200bd00"
+            },
+            {
+              "timestamp": "2026-11-11T01:04:22.416755+08:00",
+              "requested": 82,
+              "hex": "789c6378c5cecdcdc2c82062c5b4898987b9050ed1f90cdf344c19a5bd18c1b40c90fecff09c81819191f13fc3c977b76f9d5e7dfefeb5ef57f71932500b30034d67503ebb62cbfb0b4771280100eaf21db7"
+            }
+          ],
+          "parser_input_hex": "00ea070b0b040100143a02b2020c03840384038403840384033a02b2020c038403840384038403840300f62835011b4a0100f62835011c4a0100ff00e70000010101ff00c9eedbdacbabcfdfd6f7d5be3100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000030000010023cda8b4efd0c50000000000000000000000000000000000000000000000",
+          "request_hex": "0c0218940001030003000d0002",
+          "wire_response_hex": "b1cb74001c02189400000d005200bd00789c6378c5cecdcdc2c82062c5b4898987b9050ed1f90cdf344c19a5bd18c1b40c90fecff09c81819191f13fc3c977b76f9d5e7dfefeb5ef57f71932500b30034d67503ebb62cbfb0b4771280100eaf21db7",
+          "header_hex": "b1cb74001c02189400000d005200bd00",
+          "header_fields_IIIHH": [
+            7654321,
+            2484601372,
+            851968,
+            82,
+            189
+          ],
+          "compressed_body_hex": "789c6378c5cecdcdc2c82062c5b4898987b9050ed1f90cdf344c19a5bd18c1b40c90fecff09c81819191f13fc3c977b76f9d5e7dfefeb5ef57f71932500b30034d67503ebb62cbfb0b4771280100eaf21db7",
+          "wire_body_length_matches": true,
+          "uncompressed_length_matches": true,
+          "parser_input_matches": true
+        },
+        {
+          "parser": "GetIndexBarsCmd",
+          "category": 9,
+          "send_chunks": [
+            {
+              "timestamp": "2026-11-11T01:04:22.416983+08:00",
+              "hex": "0c01086401011c001c002d050000333939333137090001000000010000000000000000000000"
+            }
+          ],
+          "recv_chunks": [
+            {
+              "timestamp": "2026-11-11T01:04:22.461484+08:00",
+              "requested": 16,
+              "hex": "b1cb74000c01086401002d051e001e00"
+            },
+            {
+              "timestamp": "2026-11-11T01:04:22.461581+08:00",
+              "requested": 30,
+              "hex": "0100f6283501aae5e605fe95028871e28c04d53d0b4be595ab5300000000"
+            }
+          ],
+          "parser_input_hex": "0100f6283501aae5e605fe95028871e28c04d53d0b4be595ab5300000000",
+          "decoded": [
+            {
+              "open": 6084.97,
+              "close": 6067.18,
+              "high": 6092.21,
+              "low": 6051.4,
+              "vol": 9125333.0,
+              "amount": 1473908441088.0,
+              "year": 2026,
+              "month": 11,
+              "day": 10,
+              "hour": 15,
+              "minute": 0,
+              "datetime": "2026-11-10 15:00",
+              "up_count": 0,
+              "down_count": 0
+            }
+          ],
+          "request_hex": "0c01086401011c001c002d050000333939333137090001000000010000000000000000000000",
+          "wire_response_hex": "b1cb74000c01086401002d051e001e000100f6283501aae5e605fe95028871e28c04d53d0b4be595ab5300000000",
+          "header_hex": "b1cb74000c01086401002d051e001e00",
+          "header_fields_IIIHH": [
+            7654321,
+            1678246156,
+            86835201,
+            30,
+            30
+          ],
+          "compressed_body_hex": "0100f6283501aae5e605fe95028871e28c04d53d0b4be595ab5300000000",
+          "wire_body_length_matches": true,
+          "uncompressed_length_matches": true,
+          "parser_input_matches": true
+        },
+        {
+          "parser": "GetIndexBarsCmd",
+          "category": 9,
+          "send_chunks": [
+            {
+              "timestamp": "2026-11-11T01:04:22.461843+08:00",
+              "hex": "0c01086401011c001c002d050000333939333137090001000100010000000000000000000000"
+            }
+          ],
+          "recv_chunks": [
+            {
+              "timestamp": "2026-11-11T01:04:22.504022+08:00",
+              "requested": 16,
+              "hex": "b1cb74000c01086401002d051f001f00"
+            },
+            {
+              "timestamp": "2026-11-11T01:04:22.504100+08:00",
+              "requested": 31,
+              "hex": "0100f52835018cb7e305dce504ae9103f6eb041ad20c4bf118a95300000000"
+            }
+          ],
+          "parser_input_hex": "0100f52835018cb7e305dce504ae9103f6eb041ad20c4bf118a95300000000",
+          "decoded": [
+            {
+              "open": 6057.42,
+              "close": 6018.16,
+              "high": 6083.13,
+              "low": 6017.75,
+              "vol": 9228826.0,
+              "amount": 1452535840768.0,
+              "year": 2026,
+              "month": 11,
+              "day": 9,
+              "hour": 15,
+              "minute": 0,
+              "datetime": "2026-11-09 15:00",
+              "up_count": 0,
+              "down_count": 0
+            }
+          ],
+          "request_hex": "0c01086401011c001c002d050000333939333137090001000100010000000000000000000000",
+          "wire_response_hex": "b1cb74000c01086401002d051f001f000100f52835018cb7e305dce504ae9103f6eb041ad20c4bf118a95300000000",
+          "header_hex": "b1cb74000c01086401002d051f001f00",
+          "header_fields_IIIHH": [
+            7654321,
+            1678246156,
+            86835201,
+            31,
+            31
+          ],
+          "compressed_body_hex": "0100f52835018cb7e305dce504ae9103f6eb041ad20c4bf118a95300000000",
+          "wire_body_length_matches": true,
+          "uncompressed_length_matches": true,
+          "parser_input_matches": true
+        },
+        {
+          "parser": "GetIndexBarsCmd",
+          "category": 9,
+          "send_chunks": [
+            {
+              "timestamp": "2026-11-11T01:04:22.504286+08:00",
+              "hex": "0c01086401011c001c002d0500003339393331370900010060ea020000000000000000000000"
+            }
+          ],
+          "recv_chunks": [
+            {
+              "timestamp": "2026-11-11T01:04:22.551224+08:00",
+              "requested": 16,
+              "hex": "b1cb74000c01086401002d0502000200"
+            },
+            {
+              "timestamp": "2026-11-11T01:04:22.551319+08:00",
+              "requested": 2,
+              "hex": "0000"
+            }
+          ],
+          "parser_input_hex": "0000",
+          "decoded": [],
+          "request_hex": "0c01086401011c001c002d0500003339393331370900010060ea020000000000000000000000",
+          "wire_response_hex": "b1cb74000c01086401002d05020002000000",
+          "header_hex": "b1cb74000c01086401002d0502000200",
+          "header_fields_IIIHH": [
+            7654321,
+            1678246156,
+            86835201,
+            2,
+            2
+          ],
+          "compressed_body_hex": "0000",
+          "wire_body_length_matches": true,
+          "uncompressed_length_matches": true,
+          "parser_input_matches": true
+        },
+        {
+          "parser": "GetXdXrInfo",
+          "category": null,
+          "send_chunks": [
+            {
+              "timestamp": "2026-11-11T01:04:22.551506+08:00",
+              "hex": "0c1f187600010b000b000f00010000333939333137"
+            }
+          ],
+          "recv_chunks": [
+            {
+              "timestamp": "2026-11-11T01:04:22.595063+08:00",
+              "requested": 16,
+              "hex": "b1cb74000c1f187600000f000b000b00"
+            },
+            {
+              "timestamp": "2026-11-11T01:04:22.595158+08:00",
+              "requested": 11,
+              "hex": "0100003339393331370000"
+            }
+          ],
+          "parser_input_hex": "0100003339393331370000",
+          "decoded": [],
+          "request_hex": "0c1f187600010b000b000f00010000333939333137",
+          "wire_response_hex": "b1cb74000c1f187600000f000b000b000100003339393331370000",
+          "header_hex": "b1cb74000c1f187600000f000b000b00",
+          "header_fields_IIIHH": [
+            7654321,
+            1981292300,
+            983040,
+            11,
+            11
+          ],
+          "compressed_body_hex": "0100003339393331370000",
+          "wire_body_length_matches": true,
+          "uncompressed_length_matches": true,
+          "parser_input_matches": true
+        },
+        {
+          "parser": "GetSecurityList",
+          "category": null,
+          "send_chunks": [
+            {
+              "timestamp": "2026-11-11T01:04:22.595353+08:00",
+              "hex": "0c0118640101100010004d040200010000000200000000000000"
+            }
+          ],
+          "recv_chunks": [
+            {
+              "timestamp": "2026-11-11T01:04:22.638086+08:00",
+              "requested": 16,
+              "hex": "b1cb74000c01186401004d044c004c00"
+            },
+            {
+              "timestamp": "2026-11-11T01:04:22.638157+08:00",
+              "requested": 76,
+              "hex": "02003839393630316400b1b1d6a4d7a8beabccd8d0c2000000008c69a3450254ffca44000000003831303031310a00d3c5bbfab6a8d7aa0000000000000000e17a9440049a99c74200000000"
+            }
+          ],
+          "parser_input_hex": "02003839393630316400b1b1d6a4d7a8beabccd8d0c2000000008c69a3450254ffca44000000003831303031310a00d3c5bbfab6a8d7aa0000000000000000e17a9440049a99c74200000000",
+          "decoded": [
+            {
+              "code": "899601",
+              "volunit": 100,
+              "decimal_point": 2,
+              "name": "北证专精特新",
+              "pre_close": 1623.97900390625
+            },
+            {
+              "code": "810011",
+              "volunit": 10,
+              "decimal_point": 4,
+              "name": "优机定转",
+              "pre_close": 99.80000305175781
+            }
+          ],
+          "request_hex": "0c0118640101100010004d040200010000000200000000000000",
+          "wire_response_hex": "b1cb74000c01186401004d044c004c0002003839393630316400b1b1d6a4d7a8beabccd8d0c2000000008c69a3450254ffca44000000003831303031310a00d3c5bbfab6a8d7aa0000000000000000e17a9440049a99c74200000000",
+          "header_hex": "b1cb74000c01186401004d044c004c00",
+          "header_fields_IIIHH": [
+            7654321,
+            1679294732,
+            72155137,
+            76,
+            76
+          ],
+          "compressed_body_hex": "02003839393630316400b1b1d6a4d7a8beabccd8d0c2000000008c69a3450254ffca44000000003831303031310a00d3c5bbfab6a8d7aa0000000000000000e17a9440049a99c74200000000",
+          "wire_body_length_matches": true,
+          "uncompressed_length_matches": true,
+          "parser_input_matches": true
+        }
+      ],
+      "calls": [
+        {
+          "label": "index/daily/page0-count1",
+          "started_at": "2026-11-11T01:04:22.416858+08:00",
+          "result": [
+            {
+              "open": 6084.97,
+              "close": 6067.18,
+              "high": 6092.21,
+              "low": 6051.4,
+              "vol": 9125333.0,
+              "amount": 1473908441088.0,
+              "year": 2026,
+              "month": 11,
+              "day": 10,
+              "hour": 15,
+              "minute": 0,
+              "datetime": "2026-11-10 15:00",
+              "up_count": 0,
+              "down_count": 0
+            }
+          ],
+          "finished_at": "2026-11-11T01:04:22.461735+08:00"
+        },
+        {
+          "label": "index/daily/page1-count1",
+          "started_at": "2026-11-11T01:04:22.461743+08:00",
+          "result": [
+            {
+              "open": 6057.42,
+              "close": 6018.16,
+              "high": 6083.13,
+              "low": 6017.75,
+              "vol": 9228826.0,
+              "amount": 1452535840768.0,
+              "year": 2026,
+              "month": 11,
+              "day": 9,
+              "hour": 15,
+              "minute": 0,
+              "datetime": "2026-11-09 15:00",
+              "up_count": 0,
+              "down_count": 0
+            }
+          ],
+          "finished_at": "2026-11-11T01:04:22.504211+08:00"
+        },
+        {
+          "label": "index/daily/past-history-empty",
+          "started_at": "2026-11-11T01:04:22.504218+08:00",
+          "result": [],
+          "finished_at": "2026-11-11T01:04:22.551393+08:00"
+        },
+        {
+          "label": "xdxr/index-empty",
+          "started_at": "2026-11-11T01:04:22.551402+08:00",
+          "result": [],
+          "finished_at": "2026-11-11T01:04:22.595232+08:00"
+        },
+        {
+          "label": "security_list/bj/page1",
+          "started_at": "2026-11-11T01:04:22.595241+08:00",
+          "result": [
+            {
+              "code": "899601",
+              "volunit": 100,
+              "decimal_point": 2,
+              "name": "北证专精特新",
+              "pre_close": 1623.97900390625
+            },
+            {
+              "code": "810011",
+              "volunit": 10,
+              "decimal_point": 4,
+              "name": "优机定转",
+              "pre_close": 99.80000305175781
+            }
+          ],
+          "finished_at": "2026-11-11T01:04:22.639017+08:00"
+        }
+      ]
+    }
+  ],
+  "finished_at": "2026-11-11T01:04:22.640399+08:00"
+}

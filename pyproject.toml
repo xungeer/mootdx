@@ -1,12 +1,15 @@
 [tool.poetry]
 name = "mootdx"
-version = "0.12.0"
+version = "0.13.0"
 description = "通达信数据读取接口."
 authors = ["bopo <ibopo@126.com>"]
 readme = "README.md"
 license = "MIT license"
-homepage = "https://www.mootdx.com"
-repository = "https://github.com/mootdx/mootdx"
+homepage = "https://github.com/xungeer/mootdx"
+repository = "https://github.com/xungeer/mootdx"
+include = [
+    { path = "THIRD_PARTY_NOTICES.md", format = ["sdist", "wheel"] },
+]
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
     "Intended Audience :: Developers",
@@ -29,7 +32,6 @@ requires-python = ">=3.10,<4.0"
 dependencies = [
     "httpx>=0.25.0,<0.29.0",
     "tenacity>=8.1.0,<9.0.0",
-    "tdxpy==0.3.0",
     "pandas>=1.5,<4.0",
     "tqdm",
     "prettytable>=3.5.0,<4.0.0",
@@ -49,10 +51,6 @@ test = [
 required-version = ">=0.11.17"
 default-groups = ["test"]
 
-[tool.uv.sources]
-tdxpy = { git = "ssh://git@github.com/xungeer/tdxpy.git", tag = "v0.3.0" }
-
-
 [tool.poetry.scripts]
 mootdx = "mootdx.__main__:entry"
 
@@ -61,7 +59,6 @@ mootdx = "mootdx.__main__:entry"
 python = "^3.10"
 httpx = ">=0.25.0,<0.29.0"
 tenacity = "^8.1.0"
-tdxpy = { git = "ssh://git@github.com/xungeer/tdxpy.git", tag = "v0.3.0" }
 pandas = ">=1.5,<4.0"
 tqdm = "*"
 prettytable = "^3.5.0"
@@ -75,7 +72,7 @@ freezegun = "^1.2.2"
 pytest = "^7.3.1"
 
 [build-system]
-requires = ["poetry-core"]
+requires = ["poetry-core==2.1.3"]
 build-backend = "poetry.core.masonry.api"
 
 
@@ -84,6 +81,7 @@ testpaths = "tests"
 addopts = "-p no:warnings"
 log_cli = 0
 log_cli_level = "DEBUG"
+markers = ["online: requires --online and real quote or HTTP services"]
 
 
 [tool.commitizen]

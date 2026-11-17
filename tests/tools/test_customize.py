@@ -1,57 +1,26 @@
-# @Author  : BoPo
-# @Time    : 2022/5/7 13:23
-# @Function:
-import glob
-from pathlib import Path
-
 import pytest
 
-from mootdx.logger import logger
 from mootdx.tools.customize import Customize
 
-tdxdir = 'tests/fixtures'
 
-
-def setup_module():
-    logger.debug('setup_module')
-    blocknew = Path(tdxdir, 'T0002', 'blocknew')
-    blocknew.exists() or blocknew.mkdir(parents=True)
-
-
-def teardown_module():
-    logger.debug('teardown_module')
-    parent = Path(tdxdir, 'T0002', 'blocknew', 'blocknew.cfg').parent
-    [Path(x).unlink() for x in glob.glob(f'{parent}/*.*')] and Path(parent).rmdir()
-
-
-@pytest.fixture(scope='function')
-def custom():
-    logger.debug('custom')
-    return Customize(tdxdir=tdxdir)
+@pytest.fixture()
+def custom(tmp_path):
+    (tmp_path / 'T0002' / 'blocknew').mkdir(parents=True)
+    client = Customize(tdxdir=str(tmp_path))
+    client.create(name='龙虎榜', symbol=['600036', '600016'], blk_file='lhb')
+    client.create(name='优质股', symbol=['600036', '600016'], blk_file='yzg')
+    return client
 
 
 def test_block_create(custom):
-    # 成功模式
-    assert custom.create(name='龙虎榜', symbol=['600036', '600016'], blk_file='blk_file')
-    assert custom.create(name='优质股', symbol=['600036', '600016'])
+    assert custom.create(name='测试板块', symbol=['600036', '600016'], blk_file='test')
     assert custom.create(name=None, symbol=['600036', '600016'])
     assert custom.create(name='优质股1', symbol=['600036', '600016'])
-
-    # 异常测试
-    with pytest.raises(Exception):
-        assert custom.create(name='优质股', symbol=['600036', '600016'])
-
-    with pytest.raises(Exception):
-        assert not custom.create(name='优质股2', symbol=[])
-
-    with pytest.raises(Exception):
-        assert not custom.create(name='优质股3', symbol=None)
-
-    with pytest.raises(Exception):
-        assert not custom.create(name='', symbol=None)
-
-    with pytest.raises(Exception):
-        assert not custom.create(name=None, symbol=None)
+    assert custom.create(name='空板块', symbol=[], blk_file='empty')
+    for name, symbols in [('优质股', ['600036']),
+                          ('优质股3', None), ('', None), (None, None)]:
+        with pytest.raises(Exception):
+            custom.create(name=name, symbol=symbols)
 
 
 def test_block_update(custom):
@@ -59,9 +28,8 @@ def test_block_update(custom):
 
 
 def test_block_search(custom):
-    assert custom.search(group=True).empty is False
-    assert custom.search().empty is False
-
+    assert not custom.search(group=True).empty
+    assert not custom.search().empty
     assert custom.search(name='龙虎榜')
     assert custom.search(name='龙虎榜', group=True)
 

@@ -1,3 +1,31 @@
+## v0.13.0 (2026-11-17)
+
+通过 [GitHub Release](https://github.com/xungeer/mootdx/releases/tag/v0.13.0) 提供源码、
+wheel 和校验文件；本次不发布到 PyPI。兼容变化见 [升级说明](upgrade-0.13.md)。
+
+### Changed
+
+- 整合握手与连接修复：标准行情默认两步 minimal，复权专用单步，保留显式 legacy；识别明确拒绝并校验完整收发、响应匹配与边界
+- 修复初始化失败清理、有界网络重试、成功响应心跳和连接关闭；显式服务器且未请求测速时不再改写 BESTIP
+- 提供 `mootdx.protocol` 低层扩展入口，随同一安装包维护；不提供或安装顶层 `tdxpy` 包
+- 将配套 `tdxpy` v0.3.0 协议实现内收至 Mootdx，并保留第三方 MIT 许可证与源码归属声明
+- 移除对私有 Git `tdxpy` 仓库的安装依赖，源码开发、构建和 wheel 安装不再需要 GitHub SSH 权限
+- 按当前 Python API 与 CLI 实现重构文档导航、安装指南和接口参考，移除失效入口与过期功能描述
+- `stocks()` 新增 `market`、`exchange`、`instrument_id` 字段；K 线和分时结果通过 `DataFrame.attrs['mootdx']` 暴露请求口径、来源服务器和采集时间
+
+### Fixed
+
+- 兼容客户端 `MooBaseSocketClient` 复用统一连接生命周期，保留旧 bind 参数别名，修复连接状态、重连和心跳失配
+
+- 补全沪市 `52`、`53`、`55`、`57` 基金代码段及深市 `18` 基金代码段，修复新 ETF 实时行情、分时和本地日线价格单位错误
+- 逐笔成交按证券类型应用价格系数，不再对 ETF 固定除以 100
+- 北交所历史 `43`、`83`、`87` 代码正确路由至北京市场
+- 标准行情客户端连接失败立即抛错，析构清理不再泄漏二次连接异常
+- 服务端复权的独立连接沿用调用方的重试预算，`max_retries=0` 不再恢复为默认重试次数
+- 区分协议失败 `None` 与合法无数据 `[]`，K 线分页失败不再返回部分历史
+- 明确定点复权锚点不具备 point-in-time 语义，并标注成交量、成交额仍为未复权的协议原始口径
+- `minute()` 使用 `Asia/Shanghai` 计算查询日期，避免部署主机时区改变交易日
+
 ## v0.12.0 (2026-07-21)
 
 ### Feat
@@ -204,7 +232,7 @@
 
 ## v0.8.13 (2022-05-07)
 
-* [自定义版本增删改查](https://www.mootdx.com/zh_CN/latest/api/extras/#05)
+* [自定义板块增删改查](api/extras.md#custom-blocks)
 
 ## v0.8.7 (2021-01-28)
 
@@ -237,8 +265,8 @@
 
 ### Add
 
-* 添加交易日历列表数据 (说明文档: https://mootdx.readthedocs.io/zh_CN/latest/extras/#04)
-* 增加新浪复权因子数据接口，并对TDX行情接口数据进行复权计算(较慢, 已加缓存机制, 暂时过渡使用) (对应文档: https://mootdx.readthedocs.io/zh_CN/latest/quote1)
+* 添加交易日历列表数据（当前说明见[辅助工具](api/extras.md#calendar-tools)）
+* 增加新浪复权因子数据接口，并对TDX行情接口数据进行复权计算(较慢, 已加缓存机制, 暂时过渡使用)（当前说明见[标准行情](api/quote1.md#client-adjusted-bars)）
 
 ## v0.7.21 (2021-09-24)
 

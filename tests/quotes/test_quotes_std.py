@@ -6,9 +6,10 @@ import pytest
 from mootdx.consts import MARKET_SH
 from mootdx.exceptions import MootdxValidationException
 from mootdx.logger import logger
-from mootdx.quotes import Quotes
+from mootdx.quotes import Quotes, StdQuotes
 
 
+@pytest.mark.online
 class TestStdQuotes(unittest.TestCase):
     client = None
 
@@ -115,7 +116,7 @@ class TestStdRaises(unittest.TestCase):
 
     # 初始化工作
     def setup_class(self):
-        self.client = Quotes.factory(market='std', timeout=10, verbose=2)  # 标准市场
+        self.client = StdQuotes.__new__(StdQuotes)
 
     def test_stock_count_raises(self):
         with pytest.raises(MootdxValidationException) as e:

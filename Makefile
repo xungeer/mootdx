@@ -1,4 +1,5 @@
 .PHONY: cleanup prepare history publish release version clean test cov uv-sync uv-test
+.PHONY: docs docs-check docs-release-check
 
 .DEFAULT_GOAL := help
 define BROWSER_PYSCRIPT
@@ -78,8 +79,14 @@ uv-test: ## 在锁定的 uv 环境中运行完整测试
 test-all:
 	tox
 
-docs:
-	poetry run mkdocs serve -a 0.0.0.0:8000
+docs: ## 本地启动文档预览
+	uv run --with-requirements docs/requirements.txt mkdocs serve -a 0.0.0.0:8000
+
+docs-check: ## 校验文档链接、Python 示例、导航和 CLI 帮助
+	uv run --locked python scripts/verify/verify_docs.py --pre-commit
+
+docs-release-check: ## 执行包含 MkDocs 严格构建的文档发布校验
+	uv run --locked --with-requirements docs/requirements.txt python scripts/verify/verify_docs.py --pre-release
 
 archive: clean
 	git archive --format zip --output ../mootdx-master.zip master
@@ -134,7 +141,7 @@ docker: # build docker image of CI/CD.
 # https://commitizen-tools.github.io/commitizen/
 # https://keepachangelog.com/zh-CN/
 #cz bump --dry-run --yes -ch -cc --increment {MAJOR,MINOR,PATCH}
-release: ## 发布版本并生成修改日志.
+release: docs-release-check ## 发布版本并生成修改日志.
 	cz bump --yes -ch -cc --increment patch --dry-run
 
 version: ## 打印项目当前版本
