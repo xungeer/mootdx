@@ -1,6 +1,6 @@
 # Third-Party Notices
 
-Mootdx 内置的通达信协议层包含由以下项目演进而来的源码：
+Mootdx v0.13.0 内置的通达信协议层包含由以下项目演进而来的源码：
 
 - `tdxpy` 0.2.7，公开发布于 PyPI：<https://pypi.org/project/tdxpy/0.2.7/>
 - `xungeer/tdxpy` v0.3.0，提交
@@ -9,6 +9,8 @@ Mootdx 内置的通达信协议层包含由以下项目演进而来的源码：
 
 公开的 `tdxpy` 0.2.7 源码以 MIT License 发布。Mootdx 对其进行修改、融合和再分发时，
 保留以下原始版权与许可声明。后续修改的版权归各自贡献者所有。
+
+协议内收后，握手、报文边界和连接生命周期修复由 Mootdx 统一维护。原始来源版本用于追溯，不表示运行时仍依赖独立的 tdxpy 包。
 
 ## tdxpy — MIT License
 

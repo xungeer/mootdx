@@ -457,24 +457,6 @@ files = [
 ]
 
 [[package]]
-name = "tdxpy"
-version = "0.3.0"
-description = "Local tdxpy fork with Shanghai, Shenzhen and Beijing market support"
-optional = false
-python-versions = ">=3.10"
-files = []
-develop = false
-
-[package.dependencies]
-pandas = ">=1.5,<4.0"
-
-[package.source]
-type = "git"
-url = "ssh://git@github.com/xungeer/tdxpy.git"
-reference = "v0.3.0"
-resolved_reference = "c8390abd02d3ff8df743302b0cd9b613607bd1f0"
-
-[[package]]
 name = "tenacity"
 version = "8.2.2"
 description = "Retry code until it succeeds"
@@ -544,4 +526,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "0324845a4ae26e60825e30c16e32935b6090cd8f36315d5999385647c62e4265"
+content-hash = "3fbc4e3c4e013acb689e72d805bc1a9e186e271cdd2e0fbf4ff1d1c240060091"

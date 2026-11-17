@@ -14,8 +14,11 @@ client = Quotes.factory(
     server=None,
     bestip=False,
     timeout=15,
+    handshake="minimal",
     heartbeat=False,
+    heartbeat_interval=10,
     auto_retry=True,
+    max_retries=4,
     raise_exception=False,
 )
 ```
@@ -25,8 +28,11 @@ client = Quotes.factory(
 - `server`：可选的 `(IP, 端口)` 二元 tuple/list。省略时使用配置中的标准行情主站。
 - `bestip`：为 `True` 时重新探测线路并更新配置。
 - `timeout`：连接超时秒数；传入假值时仍使用 15 秒。
+- `handshake`：默认 `minimal` 两步；`legacy` 三步和 `single` 单步须显式选择。服务端复权另用单步连接。
 - `heartbeat`：是否启用协议心跳。
-- `auto_retry`：底层请求失败后是否自动重试。
+- `heartbeat_interval`：成功响应后空闲多久触发心跳，单位为秒。
+- `max_retries`：网络失败后的最大额外重试次数；默认 4。
+- `auto_retry`：网络失败后是否有限重试；明确拒绝、协议损坏和参数错误不自动重试。
 - `raise_exception`：底层请求失败时是否抛出协议异常。
 
 ## 接口总览
@@ -60,7 +66,7 @@ single = client.quotes(symbol='600036')
 multiple = client.quotes(symbol=['000001', '600036', '920971'])
 ```
 
-市场由代码自动推断。未传 `symbol`、列表为空、协议校验失败或主站无数据时返回空 DataFrame。
+市场由代码自动推断。未传 `symbol`、列表为空或主站合法返回无数据时返回空 DataFrame；协议校验、解析或传输失败抛出 `MootdxDataException` 或底层协议异常，不再与合法空行情混淆。
 
 ## 普通 K 线与客户端复权 {#client-adjusted-bars}
 
@@ -75,7 +81,7 @@ multiple = client.quotes(symbol=['000001', '600036', '920971'])
 - `offset`：期望条数。主站单次通常最多返回 800 条，超过 800 时自动分页。
 - `adjust`：可通过关键字传 `qfq`、`01`、`before` 或 `hfq`、`02`、`after`。
 
-分页结果按时间从旧到新合并。主站历史不足或中途少返时，最终行数会小于 `offset`。
+分页结果按时间从旧到新合并。主站合法返回空页或短页时视为历史耗尽，最终行数可以小于 `offset`；底层传输、解压或解析失败返回 `None` 时抛出 `MootdxDataException`，不会返回已经累计的部分分页。
 
 ### `bars()` 的复权方式
 
@@ -97,7 +103,7 @@ hfq = client.bars(symbol='600036', frequency='day', offset=800, adjust='hfq')
 方法签名（省略 `self`）：`adjusted_bars(symbol='000001', frequency=9, start=0,
 offset=800, adjust='qfq', anchor_date=None, **kwargs)`。
 
-该方法直接使用通达信 `0x052d` 请求中的复权参数，不下载客户端复权因子，也不调用 `bars()` 的旧版复权流程。它会使用当前主站建立一个临时连接，并在返回或抛错前关闭该连接。
+该方法直接使用通达信 `0x052d` 请求中的复权参数，不下载客户端复权因子，也不调用 `bars()` 的旧版复权流程。它会使用当前主站建立一个临时单步握手连接，沿用调用方的 `auto_retry`、`raise_exception` 和 `max_retries`，保持心跳关闭，并在返回或抛错前关闭该连接。
 
 ### 参数限制
 
@@ -172,6 +178,13 @@ fixed = client.adjusted_bars(
 )
 ```
 
+`anchor_date` 只是服务端定点复权的价格锚点，不是历史知识截止日或 `as_of` 日期。
+服务端会按查询时已经掌握的企业行动重算历史，即使锚点早于某次分红或份额折算，结果
+仍可能包含该锚点之后的事件。调用 `fixed_*` 会产生警告，返回元数据明确标记
+`point_in_time=False`、`anchor_date_semantics='price_anchor'`。正式回测不得把
+`fixed_*` 当作点时数据；应读取 `adjust='none'` 原始价格，并使用带
+`effective_date`、`observed_at` 和版本号的企业行动数据自行复权。
+
 秒线不支持服务端复权，类别 13 必须使用 `adjust='none'`：
 
 ```python
@@ -184,8 +197,9 @@ seconds = client.adjusted_bars(
 ```
 
 返回结构与普通股票 K 线兼容；秒线额外包含 `second` 列，`datetime` 精确到秒。
-默认 `raise_exception=False` 时，连接失败或主站无数据返回空 DataFrame；创建客户端时
-传入 `raise_exception=True` 后，连接或协议错误可能直接抛出异常。
+服务端复权只调整价格，`vol`、`volume` 和 `amount` 仍是未复权的协议原始口径。
+连接或请求失败会抛出 `MootdxDataException` 或底层协议异常，合法无数据才返回空
+DataFrame。创建客户端时传入 `raise_exception=True` 可以保留底层协议异常细节。
 
 ## 证券数量与列表
 
@@ -207,7 +221,7 @@ sh = client.stocks(market=MARKET_SH)
 bj = client.stocks(market=MARKET_BJ)
 ```
 
-接口先读取市场数量，再按每批 1000 条下载完整列表。任何一页少返、最终数量不一致或市场非法都会抛出 `MootdxValidationException`，不会静默返回不完整结果。市场数量为零时返回 `None`，否则返回 DataFrame。
+接口先读取市场数量，再按每批 1000 条下载完整列表。任何一页少返、最终数量不一致或市场非法都会抛出 `MootdxValidationException`，不会静默返回不完整结果。市场数量为零时返回 `None`，否则返回 DataFrame。结果新增 `market`、`exchange` 和 `instrument_id`；其中 `instrument_id` 使用 `SH.600036`、`SZ.000001`、`BJ.920971` 形式，可作为跨市场证券主键。
 
 ### `stock_all()`
 
@@ -234,7 +248,7 @@ all_stocks = client.stock_all()
 today = client.minute(symbol='000001')
 ```
 
-`minute()` 取本机当天的 `YYYYMMDD`，再调用历史分时接口；它不是底层实时分时命令的直接封装。
+`minute()` 按 `Asia/Shanghai` 的当天日期生成 `YYYYMMDD`，再调用历史分时接口；它不是底层实时分时命令的直接封装。
 
 ### 历史分时
 
@@ -244,7 +258,7 @@ history = client.minutes(symbol='000001', date='20171010')
 
 方法签名（省略 `self`）：`minutes(symbol, date='20191023', **kwargs)`。
 
-`date` 使用 `YYYYMMDD` 字符串或整数。市场从 `symbol` 推断；不属于 0、1、2 时抛出 `MootdxValidationException`。无数据返回空 DataFrame。
+`date` 使用 `YYYYMMDD` 字符串或整数。市场从 `symbol` 推断；不属于 0、1、2 时抛出 `MootdxValidationException`。无数据返回空 DataFrame，请求失败抛出 `MootdxDataException`。该协议只返回按顺序排列的价格和成交量，没有每条记录的真实时间戳，因此元数据标记 `fact_table_eligible=False`；分钟事实表应使用 `bars(frequency='1m')`。
 
 ## 分笔成交
 
@@ -260,6 +274,9 @@ history = client.minutes(symbol='000001', date='20171010')
 `transactions(symbol, start=0, offset=800, date='20170209', **kwargs)`。
 
 `date` 会转换为整数 `YYYYMMDD`。该方法同样不自动分页，结果可能少于 `offset`。
+
+实时和历史逐笔价格会按证券类型使用价格系数。沪市 `52`、`53`、`55` 等新 ETF
+代码与既有 ETF 一样使用三位小数，避免旧版固定除以 100 造成的 10 倍价格错误。
 
 ## 公司资料
 

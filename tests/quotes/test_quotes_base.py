@@ -5,6 +5,8 @@ import pytest
 from mootdx.quotes import Quotes
 
 
+pytestmark = pytest.mark.online
+
 @pytest.mark.skip(reason='暂时不做重复测试')
 class TestStdQuotes(unittest.TestCase):
     client = None

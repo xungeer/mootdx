@@ -1,8 +1,11 @@
 import unittest
 
+import pytest
+
 from mootdx.quotes import Quotes
 
 
+@pytest.mark.online
 class TestAdjust2(unittest.TestCase):
     client = None
 

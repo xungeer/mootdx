@@ -1,12 +1,15 @@
 import math
 import time
+import warnings
 from datetime import datetime
+from datetime import timezone
+from zoneinfo import ZoneInfo
 
 import pandas
 import pandas as pd
-from tdxpy.exceptions import ValidationException
-from tdxpy.exhq import TdxExHq_API
-from tdxpy.hq import TdxHq_API
+from mootdx._protocol.exceptions import ValidationException
+from mootdx._protocol.exhq import TdxExHq_API
+from mootdx._protocol.hq import TdxHq_API
 from tenacity import retry
 from tenacity import retry_if_exception_type
 from tenacity import retry_if_result
@@ -14,16 +17,18 @@ from tenacity import stop_after_attempt
 from tenacity import wait_random
 from tqdm import tqdm
 
+from mootdx import __version__
 from mootdx import config
 from mootdx.adjusted import ServerAdjustedTdxHqAPI
 from mootdx.adjusted import SERVER_ADJUSTED_BAR_BATCH_SIZE
 from mootdx.adjusted import normalize_adjust
 from mootdx.adjusted import normalize_anchor_date
 from mootdx.adjusted import normalize_period
+from mootdx.consts import MARKET_BJ
 from mootdx.consts import MARKET_SH
 from mootdx.consts import MARKET_SZ
-from mootdx.consts import MARKET_BJ
 from mootdx.consts import return_last_value
+from mootdx.exceptions import MootdxDataException
 from mootdx.exceptions import MootdxValidationException
 from mootdx.logger import logger
 from mootdx.server import check_server
@@ -31,6 +36,84 @@ from mootdx.utils import get_frequency
 from mootdx.utils import get_stock_market
 from mootdx.utils import get_stock_markets
 from mootdx.utils import to_data
+
+
+MARKET_EXCHANGES = {
+    MARKET_SZ: 'SZ',
+    MARKET_SH: 'SH',
+    MARKET_BJ: 'BJ',
+}
+
+ADJUST_MODE_NAMES = {
+    0: 'none',
+    1: 'qfq',
+    2: 'hfq',
+    3: 'fixed_qfq',
+    4: 'fixed_hfq',
+}
+
+
+def _source_server(server):
+    if isinstance(server, (tuple, list)) and len(server) == 2:
+        return f'{server[0]}:{server[1]}'
+    return None
+
+
+def _attach_market_metadata(
+    data,
+    *,
+    market,
+    symbol,
+    server,
+    category=None,
+    period_param=None,
+    start=None,
+    offset=None,
+    date=None,
+    adjust_mode='none',
+    anchor_date=None,
+    adjustment_basis='raw',
+    fact_table_eligible=True,
+):
+    """附加不改变列结构的请求、单位和来源元数据。"""
+    exchange = MARKET_EXCHANGES.get(market)
+    code = str(symbol)[-6:] if isinstance(symbol, str) else None
+    instrument_id = f'{exchange}.{code}' if exchange and code else None
+    metadata = {
+        'mootdx_version': __version__,
+        'market': market,
+        'exchange': exchange,
+        'symbol': code if code else symbol,
+        'instrument_id': instrument_id,
+        'category': category,
+        'period_param': period_param,
+        'request_start': start,
+        'requested_count': offset,
+        'request_date': str(date) if date is not None else None,
+        'returned_count': len(data),
+        'adjust_mode': adjust_mode,
+        'anchor_date': anchor_date or None,
+        'anchor_date_semantics': 'price_anchor' if str(adjust_mode).startswith('fixed_') else None,
+        'adjustment_basis': adjustment_basis,
+        'point_in_time': False,
+        'volume_semantics': 'tdx_protocol_native_unadjusted',
+        'amount_semantics': 'tdx_protocol_native_unadjusted',
+        'timezone': 'Asia/Shanghai',
+        'index_timezone': str(data.index.tz) if isinstance(data.index, pd.DatetimeIndex) and data.index.tz else None,
+        'source': 'mootdx/tdx',
+        'source_server': _source_server(server),
+        'fetched_at_utc': datetime.now(timezone.utc).isoformat(),
+        'fact_table_eligible': fact_table_eligible,
+    }
+    data.attrs['mootdx'] = metadata
+    return data
+
+
+def _raise_failed_response(operation, symbol, start=None, count=None):
+    raise MootdxDataException(
+        f'{operation} 请求失败: symbol={symbol}, start={start}, count={count}; '
+        '未返回协议结果，已拒绝空数据或部分数据'
+    )
 
 
 class Quotes(object):
@@ -75,11 +158,15 @@ class BaseQuotes(object):
     timeout = 15
 
     def __init__(self, server=None, bestip: bool = False, timeout: int = None, **kwargs) -> None:
-        logger.debug('config.setup()')
-        config.setup()
-
+        self.client = None
+        self._connection_error = None
         logger.debug(f'server => {server}')
         self.server = valid_server(server)
+        # An explicitly selected endpoint is local to this client. In particular,
+        # it must not trigger a configuration scan or overwrite another client.
+        if self.server is None:
+            logger.debug('config.setup()')
+            config.setup()
 
         logger.debug(f'bestip => {bestip}')
         bestip and check_server(sync=False)
@@ -91,13 +178,28 @@ class BaseQuotes(object):
         logger.debug(f'verbose => {self.verbose}')
 
     def __del__(self):
-        logger.debug('call __del__')
-        self.close()
+        try:
+            self.close()
+        except Exception:
+            # Constructors can fail before a transport exists; explicit close()
+            # remains available to callers that need cleanup errors.
+            pass
 
     def reconnect(self):
-        if self.closed:
-            logger.debug('服务器连接已断开，正进行重新连接...')
-            self.client.connect(*self.bestip)
+        if self.client is None:
+            return False
+        if not self.closed:
+            return self.client
+        logger.debug('服务器连接已断开，正进行重新连接...')
+        reconnect = getattr(self.client, 'reconnect', None)
+        if reconnect is not None:
+            result = reconnect()
+        else:
+            # Compatibility with protocol releases predating reconnect().
+            result = self.client.connect(*self.server, time_out=self.timeout)
+        if result:
+            self._connection_error = None
+        return result
 
     def close(self):
         logger.debug('close')
@@ -105,16 +207,22 @@ class BaseQuotes(object):
 
     @property
     def closed(self) -> bool:
-        if not hasattr(self.client.client, '_closed') or getattr(self.client.client, '_closed'):
-            return True
+        transport = getattr(self.client, 'client', None)
+        return transport is None or getattr(transport, '_closed', True)
 
-        return False
+    @property
+    def last_error(self):
+        """Last failure reported by the bundled protocol client."""
+        return getattr(self.client, 'last_error', None) or getattr(self, '_connection_error', None)
+
+    def _select_server(self, market):
+        if self.server is not None:
+            return self.server
+        selected = valid_server(config.get('BESTIP').get(market))
+        return selected or valid_server(config.get('SERVER')[market][0][1:])
 
     def pool(self):
         ...
-
-
-instance: BaseQuotes
 
 
 def check_empty(value):
@@ -124,14 +232,7 @@ def check_empty(value):
     :param value: 要判断的值
     :return:
     """
-    _empty = value.all().empty if isinstance(value, pd.DataFrame) else not value
-
-    # 判断状态空，则重连接
-    if instance and _empty:
-        logger.warning('返回数据空, 重新连接服务器...')
-        # instance.client.connect(*instance.server)
-
-    return _empty
+    return value.empty if isinstance(value, pd.DataFrame) else not value
 
 
 class StdQuotes(BaseQuotes):
@@ -139,7 +240,7 @@ class StdQuotes(BaseQuotes):
     股票市场实时行情"""
 
     def __init__(self, server=None, bestip=False, timeout=15, heartbeat=False, auto_retry=True, raise_exception=False,
-                 **kwargs):
+                 multithread=False, handshake=None, heartbeat_interval=None, max_retries=None, **kwargs):
         """构造函数
 
         :param bestip:  最佳 IP
@@ -148,24 +249,32 @@ class StdQuotes(BaseQuotes):
         """
 
         super().__init__(bestip=bestip, timeout=timeout, server=server, **kwargs)
-        self.server and config.set('BESTIP', {'HQ': self.server})
-
-        try:
-            config.get('SERVER').get('HQ')[0]
-        except ValueError as ex:
-            logger.warning(ex)
-        finally:
-            default = config.get('SERVER').get('HQ')[0][1:]
-            self.server = config.get('BESTIP').get('HQ', default)
+        self.server = self._select_server('HQ')
 
         logger.debug(f'server: {self.server}')
         ip, port = self.server
 
-        self.client = TdxHq_API(heartbeat=heartbeat, auto_retry=auto_retry, raise_exception=raise_exception)
-        self.client.connect(ip, int(port), time_out=timeout)
-
-        global instance
-        instance = self
+        options = dict(heartbeat=heartbeat, auto_retry=auto_retry, raise_exception=raise_exception,
+                       multithread=multithread)
+        # Let the bundled standard protocol select its default handshake.
+        # Explicit connection options are forwarded without silent fallbacks.
+        if handshake is not None:
+            options['handshake'] = handshake
+        if heartbeat_interval is not None:
+            options['heartbeat_interval'] = heartbeat_interval
+        if max_retries is not None:
+            options['max_retries'] = max_retries
+        self.client = TdxHq_API(**options)
+        try:
+            connected = self.client.connect(ip, int(port), time_out=self.timeout)
+        except Exception as exc:
+            self._connection_error = exc
+            self.close()
+            raise
+        if not connected:
+            error = self.last_error
+            self.close()
+            raise MootdxDataException(f'标准行情服务器连接失败: {ip}:{port}') from error
 
     def traffic(self):
         return self.client.get_traffic_stats()
@@ -187,8 +296,11 @@ class StdQuotes(BaseQuotes):
         try:
             symbol = get_stock_markets(symbol)
             result = self.client.get_security_quotes(symbol)
-        except ValidationException:
-            return to_data(None)
+        except ValidationException as ex:
+            raise MootdxDataException(f'实时行情请求或解析失败: symbol={symbol}') from ex
+
+        if result is None:
+            _raise_failed_response('实时行情', symbol)
 
         return to_data(result, symbol=symbol, client=self, **kwargs)
 
@@ -210,7 +322,22 @@ class StdQuotes(BaseQuotes):
         
         if offset <= BATCH_SIZE:
             result = self.client.get_security_bars(int(frequency), int(market), str(symbol), int(start), int(offset))
-            return to_data(result, symbol=symbol, client=self, **kwargs)
+            if result is None:
+                _raise_failed_response('K线', symbol, start, offset)
+            data = to_data(result, symbol=symbol, client=self, **kwargs)
+            return _attach_market_metadata(
+                data,
+                market=market,
+                symbol=symbol,
+                server=self.server,
+                category=frequency,
+                period_param=1,
+                start=start,
+                offset=offset,
+                adjust_mode=kwargs.get('adjust', 'none') or 'none',
+                adjustment_basis='client_legacy' if kwargs.get('adjust') else 'raw',
+                fact_table_eligible=frequency != 4 and not bool(kwargs.get('adjust')),
+            )
         
         # 分页请求以突破800条限制
         all_data = []
@@ -219,8 +346,17 @@ class StdQuotes(BaseQuotes):
         
         while remaining > 0:
             batch_count = min(remaining, BATCH_SIZE)
-            result = self.client.get_security_bars(int(frequency), int(market), str(symbol), int(current_start), int(batch_count))
-            
+            result = self.client.get_security_bars(
+                int(frequency),
+                int(market),
+                str(symbol),
+                int(current_start),
+                int(batch_count),
+            )
+
+            if result is None:
+                _raise_failed_response('K线分页', symbol, current_start, batch_count)
+
             if not result:
                 break
                 
@@ -237,7 +373,20 @@ class StdQuotes(BaseQuotes):
             if remaining > 0:
                 time.sleep(0.3)
         
-        return to_data(all_data, symbol=symbol, client=self, **kwargs)
+        data = to_data(all_data, symbol=symbol, client=self, **kwargs)
+        return _attach_market_metadata(
+            data,
+            market=market,
+            symbol=symbol,
+            server=self.server,
+            category=frequency,
+            period_param=1,
+            start=start,
+            offset=offset,
+            adjust_mode=kwargs.get('adjust', 'none') or 'none',
+            adjustment_basis='client_legacy' if kwargs.get('adjust') else 'raw',
+            fact_table_eligible=frequency != 4 and not bool(kwargs.get('adjust')),
+        )
 
     def adjusted_bars(
         self,
@@ -249,7 +398,12 @@ class StdQuotes(BaseQuotes):
         anchor_date=None,
         **kwargs,
     ):
-        """通过通达信 0x052d 服务端参数直接获取复权 K 线，不使用外部因子。"""
+        """通过通达信 0x052d 服务端参数直接获取复权 K 线。
+
+        ``anchor_date`` 只是服务端定点复权的价格锚点，不是历史知识截止日。
+        服务端复权基于查询时可用的企业行动信息，不能直接作为 point-in-time
+        回测数据。
+        """
         category, period_param = normalize_period(frequency)
 
         if isinstance(start, bool) or not isinstance(start, int) or start < 0 or start > 0xFFFF:
@@ -272,17 +426,25 @@ class StdQuotes(BaseQuotes):
             raise ValueError('定点复权必须提供 anchor_date')
         if category == 13 and adjust_mode != 0:
             raise ValueError('通达信秒线不支持服务端复权, adjust 必须为 none')
+        if adjust_mode in [3, 4]:
+            warnings.warn(
+                'anchor_date 只是定点复权价格锚点，不是历史知识截止日；'
+                'fixed_* 结果不可直接作为 point-in-time 回测数据',
+                UserWarning,
+                stacklevel=2,
+            )
 
         api = ServerAdjustedTdxHqAPI(
             heartbeat=False,
             auto_retry=self.client.auto_retry,
             raise_exception=self.client.raise_exception,
+            max_retries=getattr(self.client, 'max_retries', 4),
         )
         ip, port = self.server
 
         try:
             if not api.connect(ip, int(port), time_out=self.timeout):
-                return to_data(None)
+                _raise_failed_response('服务端复权连接', symbol, start, offset)
 
             if offset <= batch_size:
                 result = api.get_server_adjusted_bars(
@@ -295,7 +457,23 @@ class StdQuotes(BaseQuotes):
                     anchor_date_raw,
                     period_param,
                 )
-                return to_data(result, symbol=symbol, client=self, **kwargs)
+                if result is None:
+                    _raise_failed_response('服务端复权K线', symbol, start, offset)
+                data = to_data(result, symbol=symbol, client=self, **kwargs)
+                return _attach_market_metadata(
+                    data,
+                    market=market,
+                    symbol=symbol,
+                    server=self.server,
+                    category=category,
+                    period_param=period_param,
+                    start=start,
+                    offset=offset,
+                    adjust_mode=ADJUST_MODE_NAMES[adjust_mode],
+                    anchor_date=anchor_date_raw,
+                    adjustment_basis='raw' if adjust_mode == 0 else 'server_latest',
+                    fact_table_eligible=adjust_mode == 0 and category != 4,
+                )
 
             all_data = []
             remaining = offset
@@ -314,6 +492,9 @@ class StdQuotes(BaseQuotes):
                     period_param,
                 )
 
+                if result is None:
+                    _raise_failed_response('服务端复权K线分页', symbol, current_start, batch_count)
+
                 if not result:
                     break
 
@@ -331,7 +512,21 @@ class StdQuotes(BaseQuotes):
                 if remaining > 0:
                     time.sleep(0.3)
 
-            return to_data(all_data, symbol=symbol, client=self, **kwargs)
+            data = to_data(all_data, symbol=symbol, client=self, **kwargs)
+            return _attach_market_metadata(
+                data,
+                market=market,
+                symbol=symbol,
+                server=self.server,
+                category=category,
+                period_param=period_param,
+                start=start,
+                offset=offset,
+                adjust_mode=ADJUST_MODE_NAMES[adjust_mode],
+                anchor_date=anchor_date_raw,
+                adjustment_basis='raw' if adjust_mode == 0 else 'server_latest',
+                fact_table_eligible=adjust_mode == 0 and category != 4,
+            )
         finally:
             api.close()
 
@@ -382,6 +577,12 @@ class StdQuotes(BaseQuotes):
             raise MootdxValidationException(
                 f'股票列表数量不完整: market={market}, expected={counts}, actual={len(stocks)}'
             )
+
+        if stocks is not None:
+            exchange = MARKET_EXCHANGES[market]
+            stocks.insert(0, 'market', market)
+            stocks.insert(1, 'exchange', exchange)
+            stocks.insert(2, 'instrument_id', exchange + '.' + stocks['code'].astype(str))
 
         return stocks
 
@@ -448,7 +649,7 @@ class StdQuotes(BaseQuotes):
         :return: pd.DataFrame
         """
 
-        today = datetime.now().strftime('%Y%m%d')
+        today = datetime.now(ZoneInfo('Asia/Shanghai')).strftime('%Y%m%d')
         return self.minutes(symbol=symbol, date=today, **kwargs)
 
     def minutes(self, symbol=None, date='20191023', **kwargs):
@@ -467,7 +668,20 @@ class StdQuotes(BaseQuotes):
 
         result = self.client.get_history_minute_time_data(market=market, code=symbol, date=date)
 
-        return to_data(result, symbol=symbol, client=self, **kwargs)
+        if result is None:
+            _raise_failed_response('历史分时', symbol)
+
+        data = to_data(result, symbol=symbol, client=self, **kwargs)
+        return _attach_market_metadata(
+            data,
+            market=market,
+            symbol=symbol,
+            server=self.server,
+            date=date,
+            adjust_mode='none',
+            adjustment_basis='raw',
+            fact_table_eligible=False,
+        )
 
     def transaction(self, symbol='', start=0, offset=800, **kwargs):
         """
@@ -483,7 +697,19 @@ class StdQuotes(BaseQuotes):
 
         result = self.client.get_transaction_data(int(market), symbol, start, offset)
 
-        return to_data(result, symbol=symbol, client=self, **kwargs)
+        if result is None:
+            _raise_failed_response('当日逐笔', symbol, start, offset)
+
+        data = to_data(result, symbol=symbol, client=self, **kwargs)
+        return _attach_market_metadata(
+            data,
+            market=market,
+            symbol=symbol,
+            server=self.server,
+            start=start,
+            offset=offset,
+            fact_table_eligible=False,
+        )
 
     def transactions(self, symbol='', start=0, offset=800, date='20170209', **kwargs):
         """
@@ -502,7 +728,20 @@ class StdQuotes(BaseQuotes):
             raise MootdxValidationException('市场代码错误, 目前只支持沪深京市场')
 
         result = self.client.get_history_transaction_data(market, symbol, start, offset, int(date))
-        return to_data(result, symbol=symbol, client=self, **kwargs)
+        if result is None:
+            _raise_failed_response('历史逐笔', symbol, start, offset)
+
+        data = to_data(result, symbol=symbol, client=self, **kwargs)
+        return _attach_market_metadata(
+            data,
+            market=market,
+            symbol=symbol,
+            server=self.server,
+            start=start,
+            offset=offset,
+            date=date,
+            fact_table_eligible=False,
+        )
 
     def F10C(self, symbol=''):  # noqa
         """
@@ -848,7 +1087,8 @@ class ExtQuotes(BaseQuotes):
 
     server = ("218.75.75.18", 7720)
 
-    def __init__(self, server: list = None, bestip=False, timeout=15, **kwargs):
+    def __init__(self, server: list = None, bestip=False, timeout=15, heartbeat=False, auto_retry=True,
+                 raise_exception=False, multithread=False, heartbeat_interval=None, max_retries=None, **kwargs):
         """
         构造函数
 
@@ -856,31 +1096,39 @@ class ExtQuotes(BaseQuotes):
         :param timeout: 超时时间
         :param kwargs:  可变参数
         """
+        if 'handshake' in kwargs:
+            raise TypeError('handshake is only supported by the standard market')
         super().__init__(bestip=bestip, timeout=timeout, server=server, **kwargs)
-        self.server and config.set('BESTIP', {'EX': self.server})
-
-        # 扩展市场行情接口（期货、港股通等）
-
-        try:
-            config.get('SERVER').get('EX')[0]
-        except ValueError as ex:
-            logger.warning(ex)
-        finally:
-            default = config.get('SERVER').get('EX')[0]
-            self.server = config.get('BESTIP').get('EX', default)
+        self.server = self._select_server('EX')
 
         for x in ['verbose', 'server', 'quiet']:
             if x in kwargs.keys():
                 del kwargs[x]
 
+        options = dict(heartbeat=heartbeat, auto_retry=auto_retry, raise_exception=raise_exception,
+                       multithread=multithread, **kwargs)
+        if heartbeat_interval is not None:
+            options['heartbeat_interval'] = heartbeat_interval
+        if max_retries is not None:
+            options['max_retries'] = max_retries
+        self.client = TdxExHq_API(**options)
         try:
-            self.client = TdxExHq_API(raise_exception=False, auto_retry=True, **kwargs)
-            self.client.connect(*self.server)
-        except Exception:  # noqa
-            logger.error('服务器连接超时.')
-
-        global instance
-        instance = self
+            if not self.client.connect(*self.server, time_out=self.timeout):
+                self._connection_error = self.last_error or MootdxDataException(
+                    f'扩展行情服务器连接失败: {self.server[0]}:{self.server[1]}'
+                )
+                self.close()
+        except Exception as exc:
+            # Preserve the extended-market return policy while retaining the
+            # initialization error and releasing the partial connection.
+            self._connection_error = exc
+            try:
+                self.client.close()
+            except Exception:
+                pass
+            if raise_exception:
+                raise
+            logger.error('扩展行情初始化失败，详见 last_error.')
 
     @staticmethod
     def validate(market, symbol):

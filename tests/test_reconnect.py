@@ -1,6 +1,8 @@
 import pytest
 
 
+pytestmark = pytest.mark.online
+
 @pytest.mark.skip(reason='暂时不做重复测试')
 def test_quotes(quotes):
     quotes.close()

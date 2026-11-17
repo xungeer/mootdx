@@ -2,6 +2,7 @@ from pathlib import Path
 from unittest import TestCase
 
 import pytest
+import pandas as pd
 
 from mootdx import get_config_path
 
@@ -13,7 +14,18 @@ except ImportError:
     not_mini_racer = True
 
 
-@pytest.mark.skipif(not_mini_racer, reason='py_mini_racer not installed')
+@pytest.fixture(autouse=True)
+def holiday_table(request, monkeypatch):
+    if request.node.get_closest_marker('online'):
+        return
+    import importlib
+    module = importlib.import_module('mootdx.utils.holiday')
+    rows = pd.DataFrame({'国家': ['中国', '法国'], '节日': ['元旦', '元旦'],
+                         '交易所': ['SH', 'FR']},
+                        index=pd.to_datetime(['2022-01-01', '2022-01-01']))
+    monkeypatch.setattr(module, '_holiday', lambda: rows)
+
+
 class TestHoliday(TestCase):
     # 初始化工作
     # def setUp(self) -> None:
@@ -42,6 +54,7 @@ class TestHoliday(TestCase):
 
 
 @pytest.mark.skipif(not_mini_racer, reason='py_mini_racer not installed')
+@pytest.mark.online
 class TestHoliday2(TestCase):
     def setUp(self) -> None:
         Path(get_config_path('caches/holidays.plk')).write_text('')
@@ -60,6 +73,7 @@ class TestHoliday2(TestCase):
 
 
 @pytest.mark.skipif(not_mini_racer, reason='py_mini_racer not installed')
+@pytest.mark.online
 def test_holidays():
     from mootdx.utils.holiday import holidays
     assert not holidays().empty

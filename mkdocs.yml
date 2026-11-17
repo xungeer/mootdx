@@ -13,10 +13,12 @@ nav:
       - 文档导航: index.md
       - 安装与开发: setup.md
       - 快速上手: quick.md
+      - 升级到 v0.13.0: upgrade-0.13.md
 
   - Python API:
       - API 概览: api/index.md
       - 使用约定: api/conventions.md
+      - 连接与协议: api/connection.md
       - 标准行情: api/quote1.md
       - 扩展行情: api/quote2.md
       - 本地数据: api/reader.md

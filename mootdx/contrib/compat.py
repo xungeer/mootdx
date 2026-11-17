@@ -1,13 +1,10 @@
-import socket
-import threading
-
-from tdxpy.base_socket_client import BaseSocketClient
-from tdxpy.base_socket_client import CONNECT_TIMEOUT
-from tdxpy.base_socket_client import TrafficStatSocket
-from tdxpy.constants import SECURITY_EXCHANGE
-from tdxpy.exceptions import TdxConnectionError
-from tdxpy.heartbeat import HeartBeatThread
-from tdxpy.reader import TdxDailyBarReader
+from mootdx._protocol.base_socket_client import BaseSocketClient
+from mootdx._protocol.base_socket_client import CONNECT_TIMEOUT
+from mootdx._protocol.constants import BJ_A_STOCK_PREFIXES
+from mootdx._protocol.constants import SECURITY_EXCHANGE
+from mootdx._protocol.constants import SH_FUND_PREFIXES
+from mootdx._protocol.constants import SZ_FUND_PREFIXES
+from mootdx._protocol.reader import TdxDailyBarReader
 
 from mootdx.logger import logger
 
@@ -66,7 +63,7 @@ class MooTdxDailyBarReader(TdxDailyBarReader):
             if code_head in ['39']:
                 return 'SZ_INDEX'
 
-            if code_head in ['15', '16', '18']:
+            if code_head in SZ_FUND_PREFIXES:
                 return 'SZ_FUND'
 
             if code_head in ['10', '11', '12', '13', '14']:
@@ -87,7 +84,7 @@ class MooTdxDailyBarReader(TdxDailyBarReader):
             if code_head in ['00', '88', '99']:
                 return 'SH_INDEX'
 
-            if code_head in ['50', '51', '56', '58']:
+            if code_head in SH_FUND_PREFIXES:
                 return 'SH_FUND'
 
             # if code_head in ['01', '10', '11', '12', '13', '14']:
@@ -97,7 +94,7 @@ class MooTdxDailyBarReader(TdxDailyBarReader):
             return 'SH_OTHER'
         
         if exchange == SECURITY_EXCHANGE[2]:
-            if code_head in ['92']:
+            if code_head in BJ_A_STOCK_PREFIXES:
                 return 'BJ_A_STOCK'
             
             if code_head in ['89']:
@@ -125,65 +122,13 @@ class MooBaseSocketClient(BaseSocketClient):
         :return: 是否连接成功 True/False
         """
 
-        self.client = TrafficStatSocket(socket.AF_INET, socket.SOCK_STREAM)
-        self.client.settimeout(time_out)
-
-        logger.debug('connecting to server : %s on port :%d' % (ip, port))
-
-        try:
-            self.ip = ip
-            self.port = port
-
-            if bindport is not None:
-                self.client.bind((bindip, bindport))
-
-            self.client.connect((ip, port))
-        except socket.timeout as e:
-            logger.debug(e)
-            logger.debug('connection expired')
-
-            if self.raise_exception:
-                raise TdxConnectionError('connection timeout error')
-
-            return False
-        except Exception as e:
-            logger.debug(e)
-            if self.raise_exception:
-                raise TdxConnectionError('other errors')
-
-            return False
-
-        logger.debug('connected!')
-
-        if self.need_setup:
-            self.setup()
-
-        if self.heartbeat:
-            self.stop_event = threading.Event()
-            self.heartbeat_thread = HeartBeatThread(self, self.stop_event, self.heartbeat_interval)
-            self.heartbeat_thread.start()
-
-        return self
+        return super().connect(
+            ip=ip, port=port, time_out=time_out,
+            bind_port=bindport, bind_ip=bindip,
+        )
 
     def disconnect(self):
-
-        if self.heartbeat_thread and self.heartbeat_thread.is_alive():
-            self.stop_event.set()
-
-        if self.client:
-            logger.debug('disconnecting')
-
-            try:
-                self.client.shutdown(socket.SHUT_RDWR)
-                self.client.close()
-                self.client = None
-            except Exception as e:
-                logger.debug(str(e))
-
-                if self.raise_exception:
-                    raise TdxConnectionError('disconnect err')
-
-            logger.debug('disconnected')
+        return super().disconnect()
 
     def setup(self):
         pass

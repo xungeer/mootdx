@@ -24,6 +24,10 @@ class MootdxValidationException(Exception):
         pass
 
 
+class MootdxDataException(MootdxValidationException):
+    """行情请求或分页失败，返回结果不可安全使用。"""
+
+
 class MootdxModuleNotFoundError(Exception):
     def __init__(self, *args, **kwargs):
         pass

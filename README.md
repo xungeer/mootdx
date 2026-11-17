@@ -10,21 +10,32 @@ Mootdx 是面向通达信数据的 Python 接口，覆盖在线行情、本地�
   沪深北证券列表、批量财务信息和行业分类码。
 - 扩展市场：期货、港股等通达信扩展行情服务所提供的市场、代码、行情和成交数据。
 - 本地数据：读取通达信日线、1 分钟、5 分钟和板块文件。
+- 数据接入：K 线协议失败显式抛错、分页失败拒绝部分结果，并提供证券主键及
+  `DataFrame.attrs['mootdx']` 请求来源元数据。
 - 专业财务：查询、下载并解析通达信历史专业财务文件。
 - 命令行：提供服务器测速、行情读取、财务文件处理和批量下载入口。
 
-## 安装当前仓库版本
+## 安装 v0.13.0
 
-本文档对应仓库中的 Mootdx 0.12.0。公共 PyPI 当前最新版本仍是 0.11.7，不包含本文
-记录的协议层内收和 0.12.0 接口；在 0.12.0 发布前，请从当前仓库安装：
+本文档对应 `xungeer/mootdx` 的 [GitHub v0.13.0 发行版](https://github.com/xungeer/mootdx/releases/tag/v0.13.0)。
+本次通过 GitHub 提供源码、wheel 和校验文件，不发布到 PyPI。安装发行版 wheel：
 
 ```shell
-git clone https://github.com/xungeer/mootdx.git
+python -m pip install "https://github.com/xungeer/mootdx/releases/download/v0.13.0/mootdx-0.13.0-py3-none-any.whl"
+```
+
+需要源码时，固定到同一 tag：
+
+```shell
+git clone --branch v0.13.0 --depth 1 https://github.com/xungeer/mootdx.git
 cd mootdx
 python -m pip install .
 ```
 
-0.12.0 发布到 PyPI 后，才可改用 `python -m pip install -U mootdx` 获得同等能力。
+`pip install -U mootdx` 访问的是所配置软件源中的同名项目，不能保证得到本 fork。
+
+从旧版本升级时，请先阅读 [v0.13.0 升级说明](docs/upgrade-0.13.md)，尤其是独立
+`tdxpy` 依赖迁移、默认握手和失败处理的变化。
 
 ## 最小示例
 
@@ -46,6 +57,7 @@ finally:
 - [文档导航](docs/index.md)
 - [安装与开发环境](docs/setup.md)
 - [快速上手](docs/quick.md)
+- [v0.13.0 升级说明](docs/upgrade-0.13.md)
 - [Python API](docs/api/index.md)
 - [命令行工具](docs/cli/index.md)
 - [版本历史](docs/history.md)

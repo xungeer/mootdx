@@ -41,8 +41,20 @@ class TestStdQuotesStockList(unittest.TestCase):
         self.assertEqual(result['code'].iloc[[0, -1]].tolist(), ['920001', '921001'])
         self.assertEqual(
             list(result.columns),
-            ['code', 'volunit', 'decimal_point', 'name', 'pre_close'],
+            [
+                'market',
+                'exchange',
+                'instrument_id',
+                'code',
+                'volunit',
+                'decimal_point',
+                'name',
+                'pre_close',
+            ],
         )
+        self.assertEqual(result['market'].unique().tolist(), [MARKET_BJ])
+        self.assertEqual(result['exchange'].unique().tolist(), ['BJ'])
+        self.assertEqual(result['instrument_id'].iloc[0], 'BJ.920001')
 
     def test_rejects_short_non_final_page(self):
         client = FakeClient()

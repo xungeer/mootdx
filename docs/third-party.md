@@ -1,6 +1,6 @@
 # 第三方声明
 
-Mootdx 的通达信协议层位于 `mootdx/_protocol/`，已经随源码和构建产物一起发布。
+Mootdx v0.13.0 的通达信协议层位于 `mootdx/_protocol/`，随同一源码包和 wheel 分发。
 使用行情、财务和服务端复权接口时，无需另行安装 `tdxpy`，也不需要 GitHub SSH
 权限。
 
@@ -17,7 +17,9 @@ Mootdx 的通达信协议层位于 `mootdx/_protocol/`，已经随源码和构�
 公开的 `tdxpy` 0.2.7 源码采用 MIT License。Mootdx 对其修改、融合和再分发时保留
 原始版权与许可声明，后续修改的版权归各自贡献者所有。随发行包提供的权威声明见
 仓库根目录的
-[THIRD_PARTY_NOTICES.md](https://github.com/xungeer/mootdx/blob/master/THIRD_PARTY_NOTICES.md)。
+[THIRD_PARTY_NOTICES.md](https://github.com/xungeer/mootdx/blob/v0.13.0/THIRD_PARTY_NOTICES.md)。
+
+协议内收后，握手、报文边界和连接生命周期修复由 Mootdx 统一维护。原始来源版本用于追溯，不表示运行时仍依赖独立的 tdxpy 包。
 
 ## tdxpy — MIT License
 

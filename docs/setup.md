@@ -11,37 +11,44 @@
 单独安装 `tdxpy`，也不需要 GitHub SSH 权限。内置源码的归属与许可见
 [第三方声明](third-party.md)。
 
-## 安装当前文档对应版本
+## 安装 v0.13.0
 
-本文档对应仓库中的 Mootdx 0.12.0。公共 PyPI 当前最新版本仍是 0.11.7，不包含
-协议层内收及本文记录的 0.12.0 接口。在 0.12.0 发布前，通过 HTTPS 克隆当前仓库，
-并在仓库根目录安装：
+本文档对应 `xungeer/mootdx` 的 [GitHub v0.13.0 发行版](https://github.com/xungeer/mootdx/releases/tag/v0.13.0)。
+本次通过 GitHub 提供源码、wheel 和校验文件，不发布到 PyPI。安装发行版 wheel：
 
 ```shell
-git clone https://github.com/xungeer/mootdx.git
+python -m pip install "https://github.com/xungeer/mootdx/releases/download/v0.13.0/mootdx-0.13.0-py3-none-any.whl"
+```
+
+需要源码时，固定到同一 tag：
+
+```shell
+git clone --branch v0.13.0 --depth 1 https://github.com/xungeer/mootdx.git
 cd mootdx
 python -m pip install .
 ```
 
-项目没有 `cli` 或 `all` 安装附加项；命令行及协议层所需的运行依赖由基础包统一声明。
+`pip install -U mootdx` 访问的是所配置软件源中的同名项目，不能保证得到本 fork。
 
-安装后可以检查版本和命令行入口：
+也可以从同一 Release 下载 wheel、源码包及校验文件，核对 SHA-256 后安装本地文件：
+
+```shell
+python -m pip install ./mootdx-0.13.0-py3-none-any.whl
+# 或安装源码包
+python -m pip install ./mootdx-0.13.0.tar.gz
+```
+
+wheel 已包含协议层，安装时只需解析公开运行依赖。项目没有 `cli` 或 `all` 安装
+附加项。安装后检查版本和命令行入口，版本应为 `0.13.0`：
 
 ```shell
 python -c "import mootdx; print(mootdx.__version__)"
 python -m mootdx --help
 ```
 
-## PyPI 发布包
-
-可在 [PyPI 项目页](https://pypi.org/project/mootdx/)核对最新公开版本。只有版本达到
-0.12.0 或更高时，下面的命令才会安装到与本文档一致的接口：
-
-```shell
-python -m pip install -U mootdx
-```
-
-从当前仓库构建出的 Mootdx wheel 包含协议层，只需安装该 wheel 及其公开运行依赖。
+同名 PyPI 项目及其版本号不能证明它包含本 fork 的实现。复现本文档应使用上述固定
+tag 或 Release 产物。已有环境需要按 [升级说明](upgrade-0.13.md) 更新依赖及 import，
+不能仅凭安装成功判断应用已经迁移。
 
 ## 开发与测试
 

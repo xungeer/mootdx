@@ -1,0 +1,573 @@
+{
+  "started_at": "2026-11-10T17:27:17.829912+00:00",
+  "environment": {
+    "python": "3.12.13 (main, May 10 2026, 19:20:41) [Clang 22.1.3 ]",
+    "executable": "/Users/xungeer/Developer/market-dashboard/.venv/bin/python",
+    "platform": "macOS-27.0.1-arm64-arm-64bit",
+    "packages": {
+      "tdxpy": {
+        "version": "0.2.9",
+        "direct_url": {
+          "url": "ssh://git@github.com/xungeer/tdxpy.git",
+          "vcs_info": {
+            "vcs": "git",
+            "commit_id": "53111f8df4dc3a27555e609f675b5d815cfb5a59",
+            "requested_revision": "v0.2.9"
+          }
+        }
+      },
+      "mootdx": {
+        "version": "0.11.9",
+        "direct_url": {
+          "url": "ssh://git@github.com/xungeer/mootdx.git",
+          "vcs_info": {
+            "vcs": "git",
+            "commit_id": "7d482a84d4b42b16c0f81c38d6f613452dd010c3",
+            "requested_revision": "v0.11.9"
+          }
+        }
+      },
+      "pytdx": {
+        "version": "1.72",
+        "direct_url": {}
+      },
+      "pandas": {
+        "version": "3.0.3",
+        "direct_url": {}
+      }
+    },
+    "sources": {
+      "tdxpy.base_socket_client": {
+        "path": "/Users/xungeer/Developer/market-dashboard/.venv/lib/python3.12/site-packages/tdxpy/base_socket_client.py",
+        "sha256": "c18b05612265c806f498a7faba3372e4dfc92d97e446636caf01c86e9277b9ce"
+      },
+      "tdxpy.exhq": {
+        "path": "/Users/xungeer/Developer/market-dashboard/.venv/lib/python3.12/site-packages/tdxpy/exhq.py",
+        "sha256": "c1f7ee9e4284c1ea38e8df608176f47d72046fbfdee7732865a42c1489b0227e"
+      },
+      "tdxpy.heartbeat": {
+        "path": "/Users/xungeer/Developer/market-dashboard/.venv/lib/python3.12/site-packages/tdxpy/heartbeat.py",
+        "sha256": "dd7c0f6f1a9d6891a56ef6e5f642d010709e0a066969358ce0054fbb87736659"
+      },
+      "tdxpy.hq": {
+        "path": "/Users/xungeer/Developer/market-dashboard/.venv/lib/python3.12/site-packages/tdxpy/hq.py",
+        "sha256": "570133d6137360bb54038c369fc28b7b6ca51cdba71eaa87ddd5cd48ee8af7ee"
+      },
+      "tdxpy.parser.base": {
+        "path": "/Users/xungeer/Developer/market-dashboard/.venv/lib/python3.12/site-packages/tdxpy/parser/base.py",
+        "sha256": "5d9a8dd98cbb5b15fa71d98b6d7bce0e384e137a5143579e9621bc2d2535925f"
+      },
+      "tdxpy.parser.setup_commands": {
+        "path": "/Users/xungeer/Developer/market-dashboard/.venv/lib/python3.12/site-packages/tdxpy/parser/setup_commands.py",
+        "sha256": "95bd3234150aa27d317f21851f39f21952794813da1a80bf018d91e4b1cef7c3"
+      },
+      "tdxpy.parser.std.get_index_bars": {
+        "path": "/Users/xungeer/Developer/market-dashboard/.venv/lib/python3.12/site-packages/tdxpy/parser/std/get_index_bars.py",
+        "sha256": "02b199dc1cd16846469d6865d9b880443a04c958f7d67e135fbc85a34836ab59"
+      },
+      "tdxpy.parser.std.get_security_bars": {
+        "path": "/Users/xungeer/Developer/market-dashboard/.venv/lib/python3.12/site-packages/tdxpy/parser/std/get_security_bars.py",
+        "sha256": "95d4814c4017f3afc2ffa8ec0036125f8d54cdc190b96d749c3727fd976c1972"
+      },
+      "tdxpy.parser.std.get_security_quotes": {
+        "path": "/Users/xungeer/Developer/market-dashboard/.venv/lib/python3.12/site-packages/tdxpy/parser/std/get_security_quotes.py",
+        "sha256": "da9841611c1ea0f075e633021e5849ca22ebc04f34bbece46ee59db8bf6d44d9"
+      }
+    },
+    "note": "Package metadata may describe an installed wheel; source paths and hashes identify code actually imported."
+  },
+  "host": "120.195.71.160",
+  "port": 7721,
+  "events": [
+    {
+      "parser": "ExSetupCmd1",
+      "category": null,
+      "send_chunks": [
+        {
+          "at": "2026-11-10T17:27:17.851825+00:00",
+          "hex": "0101486500015200520054241f32c6e5d53dfb411f32c6e5d53dfb411f32c6e5d53dfb411f32c6e5d53dfb411f32c6e5d53dfb411f32c6e5d53dfb411f32c6e5d53dfb411f32c6e5d53dfb41cce16dffd5ba3fb8cbc57a054f7748ea"
+        }
+      ],
+      "recv_chunks": [
+        {
+          "at": "2026-11-10T17:27:17.892054+00:00",
+          "requested": 16,
+          "hex": "b1cb740011014865000054244a002b01"
+        },
+        {
+          "at": "2026-11-10T17:27:17.892071+00:00",
+          "requested": 74,
+          "hex": "789c63642003bc62e7e696666410cc28a92ac490dc2157eac01000643032ecfeb971dff55307cf9363070d0123038395551a1058191a9aeb199a98eb195be819991812d0060038ec1035"
+        }
+      ],
+      "started_at": "2026-11-10T17:27:17.851793+00:00",
+      "response_hex": "0100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000ea070b0b1b01001168747a710000000000000000000000000000000000b81e754000500000000100bbf9b1bed7cac1cf00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100003a3a666666663a3131372e3134372e33382e32343100000000000000000000000000000000000000000000000000000000000000",
+      "response_bytes": 299,
+      "request_hex": "0101486500015200520054241f32c6e5d53dfb411f32c6e5d53dfb411f32c6e5d53dfb411f32c6e5d53dfb411f32c6e5d53dfb411f32c6e5d53dfb411f32c6e5d53dfb411f32c6e5d53dfb41cce16dffd5ba3fb8cbc57a054f7748ea",
+      "wire_response_hex": "b1cb740011014865000054244a002b01789c63642003bc62e7e696666410cc28a92ac490dc2157eac01000643032ecfeb971dff55307cf9363070d0123038395551a1058191a9aeb199a98eb195be819991812d0060038ec1035",
+      "header_hex": "b1cb740011014865000054244a002b01",
+      "header_fields_IIIHH": [
+        7654321,
+        1699217681,
+        609484800,
+        74,
+        299
+      ],
+      "wire_body_length_matches": true,
+      "uncompressed_length_matches": true,
+      "finished_at": "2026-11-10T17:27:17.892091+00:00"
+    },
+    {
+      "parser": "GetInstrumentBars",
+      "category": 8,
+      "send_chunks": [
+        {
+          "at": "2026-11-10T17:27:17.892121+00:00",
+          "hex": "0101086a010116001600ff233e39333230303000000008000100000000000200"
+        }
+      ],
+      "recv_chunks": [
+        {
+          "at": "2026-11-10T17:27:18.031054+00:00",
+          "requested": 16,
+          "hex": "b1cb74000101086a0100ff2354005400"
+        },
+        {
+          "at": "2026-11-10T17:27:18.031083+00:00",
+          "requested": 84,
+          "hex": "3e3933323030300000000800010000000000020056b483033d442f453d442f453d442f453d442f4500000000000000000000000056b4840314482f45e1482f4514482f45e1482f4500c97f456201000000000000"
+        }
+      ],
+      "started_at": "2026-11-10T17:27:17.892112+00:00",
+      "response_hex": "3e3933323030300000000800010000000000020056b483033d442f453d442f453d442f453d442f4500000000000000000000000056b4840314482f45e1482f4514482f45e1482f4500c97f456201000000000000",
+      "response_bytes": 84,
+      "decoded": [
+        {
+          "open": 2804.264892578125,
+          "high": 2804.264892578125,
+          "low": 2804.264892578125,
+          "close": 2804.264892578125,
+          "position": 0,
+          "trade": 0,
+          "price": 0.0,
+          "year": 2026,
+          "month": 11,
+          "day": 10,
+          "hour": 14,
+          "minute": 59,
+          "datetime": "2026-11-10 14:59",
+          "amount": 0.0
+        },
+        {
+          "open": 2804.5048828125,
+          "high": 2804.554931640625,
+          "low": 2804.5048828125,
+          "close": 2804.554931640625,
+          "position": 1166002432,
+          "trade": 354,
+          "price": 0.0,
+          "year": 2026,
+          "month": 11,
+          "day": 10,
+          "hour": 15,
+          "minute": 0,
+          "datetime": "2026-11-10 15:00",
+          "amount": 4092.5625
+        }
+      ],
+      "request_hex": "0101086a010116001600ff233e39333230303000000008000100000000000200",
+      "wire_response_hex": "b1cb74000101086a0100ff23540054003e3933323030300000000800010000000000020056b483033d442f453d442f453d442f453d442f4500000000000000000000000056b4840314482f45e1482f4514482f45e1482f4500c97f456201000000000000",
+      "header_hex": "b1cb74000101086a0100ff2354005400",
+      "header_fields_IIIHH": [
+        7654321,
+        1778909441,
+        603914241,
+        84,
+        84
+      ],
+      "wire_body_length_matches": true,
+      "uncompressed_length_matches": true,
+      "finished_at": "2026-11-10T17:27:18.031154+00:00"
+    },
+    {
+      "parser": "GetInstrumentBars",
+      "category": 9,
+      "send_chunks": [
+        {
+          "at": "2026-11-10T17:27:18.031207+00:00",
+          "hex": "0101086a010116001600ff233e39333230303000000009000100000000000200"
+        }
+      ],
+      "recv_chunks": [
+        {
+          "at": "2026-11-10T17:27:18.053332+00:00",
+          "requested": 16,
+          "hex": "b1cb74000101086a0100ff2354005400"
+        },
+        {
+          "at": "2026-11-10T17:27:18.053355+00:00",
+          "requested": 84,
+          "hex": "3e39333230303000000009000100000000000200f5283501ac2f2c4520932d4578d82a4595162b45086399480800000000000000f6283501c7a92d45b56d2f458e9e2d45e0482f451265a2481201000000000000"
+        }
+      ],
+      "started_at": "2026-11-10T17:27:18.031181+00:00",
+      "response_hex": "3e39333230303000000009000100000000000200f5283501ac2f2c4520932d4578d82a4595162b45086399480800000000000000f6283501c7a92d45b56d2f458e9e2d45e0482f451265a2481201000000000000",
+      "response_bytes": 84,
+      "decoded": [
+        {
+          "open": 2754.9794921875,
+          "high": 2777.1953125,
+          "low": 2733.529296875,
+          "close": 2737.411376953125,
+          "position": 1218011912,
+          "trade": 8,
+          "price": 0.0,
+          "year": 2026,
+          "month": 11,
+          "day": 9,
+          "hour": 15,
+          "minute": 0,
+          "datetime": "2026-11-09 15:00",
+          "amount": 314136.25
+        },
+        {
+          "open": 2778.611083984375,
+          "high": 2806.856689453125,
+          "low": 2777.90966796875,
+          "close": 2804.5546875,
+          "position": 1218602258,
+          "trade": 274,
+          "price": 0.0,
+          "year": 2026,
+          "month": 11,
+          "day": 10,
+          "hour": 15,
+          "minute": 0,
+          "datetime": "2026-11-10 15:00",
+          "amount": 332584.5625
+        }
+      ],
+      "request_hex": "0101086a010116001600ff233e39333230303000000009000100000000000200",
+      "wire_response_hex": "b1cb74000101086a0100ff23540054003e39333230303000000009000100000000000200f5283501ac2f2c4520932d4578d82a4595162b45086399480800000000000000f6283501c7a92d45b56d2f458e9e2d45e0482f451265a2481201000000000000",
+      "header_hex": "b1cb74000101086a0100ff2354005400",
+      "header_fields_IIIHH": [
+        7654321,
+        1778909441,
+        603914241,
+        84,
+        84
+      ],
+      "wire_body_length_matches": true,
+      "uncompressed_length_matches": true,
+      "finished_at": "2026-11-10T17:27:18.053389+00:00"
+    },
+    {
+      "parser": "GetInstrumentBars",
+      "category": 8,
+      "send_chunks": [
+        {
+          "at": "2026-11-10T17:27:18.053429+00:00",
+          "hex": "0101086a010116001600ff232f49464c30000000000008000100000000000200"
+        }
+      ],
+      "recv_chunks": [
+        {
+          "at": "2026-11-10T17:27:18.405926+00:00",
+          "requested": 16,
+          "hex": "b1cb74000101086a0100ff2354005400"
+        },
+        {
+          "at": "2026-11-10T17:27:18.405953+00:00",
+          "requested": 84,
+          "hex": "2f49464c3000000000000800010000000000020056b4830366567d4500607d45cd3c7d4566467d45e6ac0000e00000000000000056b4840333437d459a597d4566167d4566167d4531ad00009900000000000000"
+        }
+      ],
+      "started_at": "2026-11-10T17:27:18.053409+00:00",
+      "response_hex": "2f49464c3000000000000800010000000000020056b4830366567d4500607d45cd3c7d4566467d45e6ac0000e00000000000000056b4840333437d459a597d4566167d4566167d4531ad00009900000000000000",
+      "response_bytes": 84,
+      "decoded": [
+        {
+          "open": 4053.39990234375,
+          "high": 4054.0,
+          "low": 4051.800048828125,
+          "close": 4052.39990234375,
+          "position": 44262,
+          "trade": 224,
+          "price": 0.0,
+          "year": 2026,
+          "month": 11,
+          "day": 10,
+          "hour": 14,
+          "minute": 59,
+          "datetime": "2026-11-10 14:59",
+          "amount": 6.202427262794505e-41
+        },
+        {
+          "open": 4052.199951171875,
+          "high": 4053.60009765625,
+          "low": 4049.39990234375,
+          "close": 4049.39990234375,
+          "position": 44337,
+          "trade": 153,
+          "price": 0.0,
+          "year": 2026,
+          "month": 11,
+          "day": 10,
+          "hour": 15,
+          "minute": 0,
+          "datetime": "2026-11-10 15:00",
+          "amount": 6.212937001276941e-41
+        }
+      ],
+      "request_hex": "0101086a010116001600ff232f49464c30000000000008000100000000000200",
+      "wire_response_hex": "b1cb74000101086a0100ff23540054002f49464c3000000000000800010000000000020056b4830366567d4500607d45cd3c7d4566467d45e6ac0000e00000000000000056b4840333437d459a597d4566167d4566167d4531ad00009900000000000000",
+      "header_hex": "b1cb74000101086a0100ff2354005400",
+      "header_fields_IIIHH": [
+        7654321,
+        1778909441,
+        603914241,
+        84,
+        84
+      ],
+      "wire_body_length_matches": true,
+      "uncompressed_length_matches": true,
+      "finished_at": "2026-11-10T17:27:18.405986+00:00"
+    },
+    {
+      "parser": "GetInstrumentBars",
+      "category": 9,
+      "send_chunks": [
+        {
+          "at": "2026-11-10T17:27:18.406026+00:00",
+          "hex": "0101086a010116001600ff232f49464c30000000000009000100000000000200"
+        }
+      ],
+      "recv_chunks": [
+        {
+          "at": "2026-11-10T17:27:18.428985+00:00",
+          "requested": 16,
+          "hex": "b1cb74000101086a0100ff2354005400"
+        },
+        {
+          "at": "2026-11-10T17:27:18.429000+00:00",
+          "requested": 84,
+          "hex": "2f49464c30000000000009000100000000000200f52835019a597e4566267f4500e07c4566067d45b0b30000e901000033637d45f628350100807f4533b37f4533f37c4566167d4531ad0000cc00000033737d45"
+        }
+      ],
+      "started_at": "2026-11-10T17:27:18.406004+00:00",
+      "response_hex": "2f49464c30000000000009000100000000000200f52835019a597e4566267f4500e07c4566067d45b0b30000e901000033637d45f628350100807f4533b37f4533f37c4566167d4531ad0000cc00000033737d45",
+      "response_bytes": 84,
+      "decoded": [
+        {
+          "open": 4069.60009765625,
+          "high": 4082.39990234375,
+          "low": 4046.0,
+          "close": 4048.39990234375,
+          "position": 46000,
+          "trade": 489,
+          "price": 4054.199951171875,
+          "year": 2026,
+          "month": 11,
+          "day": 9,
+          "hour": 15,
+          "minute": 0,
+          "datetime": "2026-11-09 15:00",
+          "amount": 6.445972935894159e-41
+        },
+        {
+          "open": 4088.0,
+          "high": 4091.199951171875,
+          "low": 4047.199951171875,
+          "close": 4049.39990234375,
+          "position": 44337,
+          "trade": 204,
+          "price": 4055.199951171875,
+          "year": 2026,
+          "month": 11,
+          "day": 10,
+          "hour": 15,
+          "minute": 0,
+          "datetime": "2026-11-10 15:00",
+          "amount": 6.212937001276941e-41
+        }
+      ],
+      "request_hex": "0101086a010116001600ff232f49464c30000000000009000100000000000200",
+      "wire_response_hex": "b1cb74000101086a0100ff23540054002f49464c30000000000009000100000000000200f52835019a597e4566267f4500e07c4566067d45b0b30000e901000033637d45f628350100807f4533b37f4533f37c4566167d4531ad0000cc00000033737d45",
+      "header_hex": "b1cb74000101086a0100ff2354005400",
+      "header_fields_IIIHH": [
+        7654321,
+        1778909441,
+        603914241,
+        84,
+        84
+      ],
+      "wire_body_length_matches": true,
+      "uncompressed_length_matches": true,
+      "finished_at": "2026-11-10T17:27:18.429023+00:00"
+    }
+  ],
+  "calls": [
+    {
+      "label": "62/932000/8",
+      "started_at": "2026-11-10T17:27:17.892096+00:00",
+      "result": [
+        {
+          "open": 2804.264892578125,
+          "high": 2804.264892578125,
+          "low": 2804.264892578125,
+          "close": 2804.264892578125,
+          "position": 0,
+          "trade": 0,
+          "price": 0.0,
+          "year": 2026,
+          "month": 11,
+          "day": 10,
+          "hour": 14,
+          "minute": 59,
+          "datetime": "2026-11-10 14:59",
+          "amount": 0.0
+        },
+        {
+          "open": 2804.5048828125,
+          "high": 2804.554931640625,
+          "low": 2804.5048828125,
+          "close": 2804.554931640625,
+          "position": 1166002432,
+          "trade": 354,
+          "price": 0.0,
+          "year": 2026,
+          "month": 11,
+          "day": 10,
+          "hour": 15,
+          "minute": 0,
+          "datetime": "2026-11-10 15:00",
+          "amount": 4092.5625
+        }
+      ],
+      "nonempty": true,
+      "elapsed_seconds": 0.13906462490558624
+    },
+    {
+      "label": "62/932000/9",
+      "started_at": "2026-11-10T17:27:18.031166+00:00",
+      "result": [
+        {
+          "open": 2754.9794921875,
+          "high": 2777.1953125,
+          "low": 2733.529296875,
+          "close": 2737.411376953125,
+          "position": 1218011912,
+          "trade": 8,
+          "price": 0.0,
+          "year": 2026,
+          "month": 11,
+          "day": 9,
+          "hour": 15,
+          "minute": 0,
+          "datetime": "2026-11-09 15:00",
+          "amount": 314136.25
+        },
+        {
+          "open": 2778.611083984375,
+          "high": 2806.856689453125,
+          "low": 2777.90966796875,
+          "close": 2804.5546875,
+          "position": 1218602258,
+          "trade": 274,
+          "price": 0.0,
+          "year": 2026,
+          "month": 11,
+          "day": 10,
+          "hour": 15,
+          "minute": 0,
+          "datetime": "2026-11-10 15:00",
+          "amount": 332584.5625
+        }
+      ],
+      "nonempty": true,
+      "elapsed_seconds": 0.022225166903808713
+    },
+    {
+      "label": "47/IFL0/8",
+      "started_at": "2026-11-10T17:27:18.053397+00:00",
+      "result": [
+        {
+          "open": 4053.39990234375,
+          "high": 4054.0,
+          "low": 4051.800048828125,
+          "close": 4052.39990234375,
+          "position": 44262,
+          "trade": 224,
+          "price": 0.0,
+          "year": 2026,
+          "month": 11,
+          "day": 10,
+          "hour": 14,
+          "minute": 59,
+          "datetime": "2026-11-10 14:59",
+          "amount": 6.202427262794505e-41
+        },
+        {
+          "open": 4052.199951171875,
+          "high": 4053.60009765625,
+          "low": 4049.39990234375,
+          "close": 4049.39990234375,
+          "position": 44337,
+          "trade": 153,
+          "price": 0.0,
+          "year": 2026,
+          "month": 11,
+          "day": 10,
+          "hour": 15,
+          "minute": 0,
+          "datetime": "2026-11-10 15:00",
+          "amount": 6.212937001276941e-41
+        }
+      ],
+      "nonempty": true,
+      "elapsed_seconds": 0.3525914161000401
+    },
+    {
+      "label": "47/IFL0/9",
+      "started_at": "2026-11-10T17:27:18.405993+00:00",
+      "result": [
+        {
+          "open": 4069.60009765625,
+          "high": 4082.39990234375,
+          "low": 4046.0,
+          "close": 4048.39990234375,
+          "position": 46000,
+          "trade": 489,
+          "price": 4054.199951171875,
+          "year": 2026,
+          "month": 11,
+          "day": 9,
+          "hour": 15,
+          "minute": 0,
+          "datetime": "2026-11-09 15:00",
+          "amount": 6.445972935894159e-41
+        },
+        {
+          "open": 4088.0,
+          "high": 4091.199951171875,
+          "low": 4047.199951171875,
+          "close": 4049.39990234375,
+          "position": 44337,
+          "trade": 204,
+          "price": 4055.199951171875,
+          "year": 2026,
+          "month": 11,
+          "day": 10,
+          "hour": 15,
+          "minute": 0,
+          "datetime": "2026-11-10 15:00",
+          "amount": 6.212937001276941e-41
+        }
+      ],
+      "nonempty": true,
+      "elapsed_seconds": 0.023032415891066194
+    }
+  ],
+  "payload_note": "Python socket API complete application frames before decompression plus parser input, not TCP pcap",
+  "finished_at": "2026-11-10T17:27:18.429077+00:00"
+}

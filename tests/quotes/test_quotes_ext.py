@@ -6,6 +6,8 @@ from mootdx.consts import KLINE_DAILY
 from mootdx.quotes import Quotes
 
 
+pytestmark = pytest.mark.online
+
 @pytest.mark.skip(reason='暂时不做测试')
 class TestExtQuotes(unittest.TestCase):
     client = None
